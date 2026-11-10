@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="270dp"
+    android:layout_margin="5dp"
+    android:orientation="vertical"
+    android:padding="10dp"
+    android:background="@drawable/bg_tarjeta_producto"
+    android:elevation="3dp">
+
+    <!-- IMAGEN DEL PRODUCTO -->
+    <ImageView
+        android:id="@+id/imgProducto"
+        android:layout_width="match_parent"
+        android:layout_height="125dp"
+        android:scaleType="fitCenter"
+        android:src="@drawable/ic_carrito"
+        android:contentDescription="Imagen del producto" />
+
+    <!-- NOMBRE DEL PRODUCTO -->
+    <TextView
+        android:id="@+id/tvNombreProducto"
+        android:layout_width="match_parent"
+        android:layout_height="42dp"
+        android:layout_marginTop="7dp"
+        android:text="Nombre del producto"
+        android:textColor="#172554"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        android:maxLines="2"
+        android:ellipsize="end"
+        android:gravity="center_vertical" />
+
+    <!-- PRECIO -->
+    <TextView
+        android:id="@+id/tvPrecioProducto"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="5dp"
+        android:text="$ 120.000"
+        android:textColor="#1646C8"
+        android:textSize="17sp"
+        android:textStyle="bold"
+        android:gravity="center_vertical" />
+
+    <!-- ESPACIO FLEXIBLE -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1" />
+
+    <!-- CALIFICACIÓN Y CARRITO -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="38dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <TextView
+            android:id="@+id/tvCalificacionProducto"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="⭐ 4.8"
+            android:textColor="#555555"
+            android:textSize="12sp"
+            android:gravity="center_vertical" />
+
+        <ImageButton
+            android:id="@+id/btnAgregarProducto"
+            android:layout_width="38dp"
+            android:layout_height="36dp"
+            android:background="@drawable/bg_button_primary"
+            android:src="@drawable/ic_carrito"
+            android:scaleType="centerInside"
+            android:padding="8dp"
+            android:contentDescription="Agregar al carrito"
+            android:tint="#FFFFFF" />
+
+    </LinearLayout>
+
+</LinearLayout>

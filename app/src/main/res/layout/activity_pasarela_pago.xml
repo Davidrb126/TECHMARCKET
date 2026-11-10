@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#FFFFFF"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="22dp">
+
+        <!-- ENCABEZADO -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="55dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <ImageButton
+                android:id="@+id/btnVolverPago"
+                android:layout_width="42dp"
+                android:layout_height="42dp"
+                android:background="@android:color/transparent"
+                android:contentDescription="Volver"
+                android:padding="8dp"
+                android:scaleType="centerInside"
+                android:src="@drawable/ic_flecha_volver" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="12dp"
+                android:text="Pasarela de pagos"
+                android:textColor="#172554"
+                android:textSize="21sp"
+                android:textStyle="bold" />
+
+        </LinearLayout>
+
+        <!-- TÍTULO E INDICACIÓN -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:text="Selecciona tu método de pago"
+            android:textColor="#172554"
+            android:textSize="18sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="7dp"
+            android:text="Elige cómo deseas realizar el pago de tu pedido."
+            android:textColor="#64748B"
+            android:textSize="14sp" />
+
+        <!-- MÉTODOS DE PAGO -->
+        <!-- Los tres RadioButton son hijos directos del RadioGroup -->
+        <RadioGroup
+            android:id="@+id/rgMetodosPago"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:orientation="vertical">
+
+            <!-- TARJETA -->
+            <RadioButton
+                android:id="@+id/rbTarjeta"
+                android:layout_width="match_parent"
+                android:layout_height="85dp"
+                android:layout_marginBottom="14dp"
+                android:background="@drawable/bg_selector_cantidad"
+                android:buttonTint="#1646C8"
+                android:gravity="center_vertical"
+                android:padding="14dp"
+                android:text="💳  Tarjeta de crédito o débito\n      Visa, Mastercard y otras tarjetas"
+                android:textColor="#172554"
+                android:textSize="14sp" />
+
+            <!-- PSE -->
+            <RadioButton
+                android:id="@+id/rbPSE"
+                android:layout_width="match_parent"
+                android:layout_height="85dp"
+                android:layout_marginBottom="14dp"
+                android:background="@drawable/bg_selector_cantidad"
+                android:buttonTint="#1646C8"
+                android:gravity="center_vertical"
+                android:padding="14dp"
+                android:text="🏦  PSE\n      Pago desde tu cuenta bancaria"
+                android:textColor="#172554"
+                android:textSize="14sp" />
+
+            <!-- PAGO CONTRA ENTREGA -->
+            <RadioButton
+                android:id="@+id/rbContraEntrega"
+                android:layout_width="match_parent"
+                android:layout_height="85dp"
+                android:background="@drawable/bg_selector_cantidad"
+                android:buttonTint="#1646C8"
+                android:gravity="center_vertical"
+                android:padding="14dp"
+                android:text="🚚  Pago contra entrega\n      Paga cuando recibas tu pedido"
+                android:textColor="#172554"
+                android:textSize="14sp" />
+
+        </RadioGroup>
+
+        <!-- INFORMACIÓN DE SEGURIDAD -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="25dp"
+            android:background="#EAF1FF"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Pago seguro"
+                android:textColor="#1646C8"
+                android:textSize="15sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:text="Tus datos de pago serán tratados de manera segura. Esta versión es una demostración de la experiencia de compra."
+                android:textColor="#475569"
+                android:textSize="13sp" />
+
+        </LinearLayout>
+
+        <!-- BOTÓN CONTINUAR -->
+        <Button
+            android:id="@+id/btnContinuarPago"
+            android:layout_width="match_parent"
+            android:layout_height="55dp"
+            android:layout_marginTop="30dp"
+            android:layout_marginBottom="20dp"
+            android:background="@drawable/bg_boton_agregar"
+            android:text="CONTINUAR"
+            android:textAllCaps="false"
+            android:textColor="#FFFFFF"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+
+    </LinearLayout>
+
+</ScrollView>

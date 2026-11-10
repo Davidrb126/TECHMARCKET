@@ -1,0 +1,25 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+
+    <!-- Cuerpo de la bolsa -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#777777"
+        android:strokeWidth="1.8"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:pathData="M5,8 L19,8 L20,21 L4,21 Z" />
+
+    <!-- Asa de la bolsa -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#777777"
+        android:strokeWidth="1.8"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:pathData="M9,8 L9,6 A3,3 0,0 1,15 6 L15,8" />
+
+</vector>

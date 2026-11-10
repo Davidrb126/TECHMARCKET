@@ -1,0 +1,284 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/white"
+    android:fillViewport="true"
+    android:overScrollMode="never">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:minHeight="680dp"
+        android:paddingStart="18dp"
+        android:paddingEnd="18dp"
+        android:paddingBottom="20dp">
+
+        <!-- Flecha para regresar al inicio de sesión -->
+        <ImageButton
+            android:id="@+id/btnVolverRegistro"
+            android:layout_width="45dp"
+            android:layout_height="45dp"
+            android:layout_marginTop="80dp"
+            android:background="@android:color/transparent"
+            android:src="@drawable/ic_arrow_back"
+            android:contentDescription="Volver al inicio de sesión"
+            android:scaleType="centerInside"
+            android:visibility="visible"
+            android:clickable="true"
+            android:focusable="true"
+            android:tint="#444444"
+            android:elevation="8dp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <!-- Título -->
+        <TextView
+            android:id="@+id/tvTituloRegistro"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="80dp"
+            android:gravity="center"
+            android:text="Crear cuenta"
+            android:textColor="#444444"
+            android:textSize="30sp"
+            android:textStyle="bold"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <!-- Subtítulo -->
+        <TextView
+            android:id="@+id/tvSubtituloRegistro"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="5dp"
+            android:gravity="center"
+            android:lineSpacingExtra="2dp"
+            android:text="Regístrate para empezar a comprar&#10;en TechMarket"
+            android:textColor="#999999"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tvTituloRegistro" />
+
+        <!-- Tipo de documento -->
+        <LinearLayout
+            android:id="@+id/contenedorTipoDocumento"
+            android:layout_width="0dp"
+            android:layout_height="60dp"
+            android:layout_marginTop="100dp"
+            android:background="@drawable/bg_input"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingStart="14dp"
+            android:paddingEnd="10dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tvSubtituloRegistro">
+
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:contentDescription="Tipo de documento"
+                android:src="@drawable/ic_documento"
+                app:tint="#A6A9AD" />
+
+            <Spinner
+                android:id="@+id/spTipoDocumentoRegistro"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:background="@android:color/transparent"
+                android:paddingStart="12dp"
+                android:paddingEnd="4dp"
+                android:spinnerMode="dropdown"
+                android:contentDescription="Seleccionar tipo de documento" />
+
+            <ImageView
+                android:id="@+id/flechaTipoDocumento"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/ic_flecha_abajo"
+                android:contentDescription="Abrir lista de documentos"
+                android:scaleType="fitCenter"
+                android:clickable="true"
+                android:focusable="true"
+                app:tint="#A6A9AD" />
+
+        </LinearLayout>
+
+        <!-- Número de documento -->
+        <EditText
+            android:id="@+id/etDocumentoRegistro"
+            android:layout_width="0dp"
+            android:layout_height="45dp"
+            android:layout_marginTop="7dp"
+            android:background="@drawable/bg_input"
+            android:drawableStart="@drawable/ic_identificacion"
+            android:drawablePadding="10dp"
+            android:drawableTint="#A6A9AD"
+            android:hint="Número de documento"
+            android:inputType="number"
+            android:maxLines="1"
+            android:paddingStart="14dp"
+            android:paddingEnd="12dp"
+            android:textColor="#666666"
+            android:textColorHint="#858585"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/contenedorTipoDocumento" />
+
+        <!-- Nombres -->
+        <EditText
+            android:id="@+id/etNombresRegistro"
+            android:layout_width="0dp"
+            android:layout_height="45dp"
+            android:layout_marginTop="7dp"
+            android:background="@drawable/bg_input"
+            android:drawableStart="@drawable/ic_usuario"
+            android:drawablePadding="10dp"
+            android:drawableTint="#A6A9AD"
+            android:hint="Nombres"
+            android:inputType="textCapWords"
+            android:maxLines="1"
+            android:paddingStart="14dp"
+            android:paddingEnd="12dp"
+            android:textColor="#666666"
+            android:textColorHint="#858585"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/etDocumentoRegistro" />
+
+        <!-- Apellidos -->
+        <EditText
+            android:id="@+id/etApellidosRegistro"
+            android:layout_width="0dp"
+            android:layout_height="45dp"
+            android:layout_marginTop="7dp"
+            android:background="@drawable/bg_input"
+            android:drawableStart="@drawable/ic_usuario"
+            android:drawablePadding="10dp"
+            android:drawableTint="#A6A9AD"
+            android:hint="Apellidos"
+            android:inputType="textCapWords"
+            android:maxLines="1"
+            android:paddingStart="14dp"
+            android:paddingEnd="12dp"
+            android:textColor="#666666"
+            android:textColorHint="#858585"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/etNombresRegistro" />
+
+        <!-- Correo electrónico -->
+        <EditText
+            android:id="@+id/etCorreoRegistro"
+            android:layout_width="0dp"
+            android:layout_height="45dp"
+            android:layout_marginTop="7dp"
+            android:background="@drawable/bg_input"
+            android:drawableStart="@drawable/ic_correo"
+            android:drawablePadding="10dp"
+            android:drawableTint="#A6A9AD"
+            android:hint="Correo electrónico"
+            android:inputType="textEmailAddress"
+            android:maxLines="1"
+            android:paddingStart="14dp"
+            android:paddingEnd="12dp"
+            android:textColor="#666666"
+            android:textColorHint="#858585"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/etApellidosRegistro" />
+
+        <!-- Contraseña -->
+        <EditText
+            android:id="@+id/etContrasenaRegistro"
+            android:layout_width="0dp"
+            android:layout_height="45dp"
+            android:layout_marginTop="7dp"
+            android:background="@drawable/bg_input"
+            android:drawableStart="@drawable/ic_candado"
+            android:drawablePadding="10dp"
+            android:drawableTint="#A6A9AD"
+            android:hint="Contraseña"
+            android:inputType="textPassword"
+            android:maxLines="1"
+            android:paddingStart="14dp"
+            android:paddingEnd="12dp"
+            android:textColor="#666666"
+            android:textColorHint="#858585"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/etCorreoRegistro" />
+
+        <!-- Botón Registrarse -->
+        <Button
+            android:id="@+id/btnRegistrarseCliente"
+            android:layout_width="0dp"
+            android:layout_height="52dp"
+            android:layout_marginTop="70dp"
+            android:background="@drawable/bg_button_primary"
+            android:backgroundTint="#2945C5"
+            android:insetTop="0dp"
+            android:insetBottom="0dp"
+            android:paddingTop="0dp"
+            android:paddingBottom="0dp"
+            android:text="Registrarse"
+            android:textAllCaps="false"
+            android:textColor="@color/white"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/etContrasenaRegistro" />
+
+        <!-- Enlace para iniciar sesión -->
+        <LinearLayout
+            android:id="@+id/contenedorVolverLogin"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:gravity="center"
+            android:orientation="horizontal"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/btnRegistrarseCliente">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="¿Ya tienes cuenta? "
+                android:textColor="#999999"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tvVolverLoginRegistro"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingStart="2dp"
+                android:paddingEnd="2dp"
+                android:text="Iniciar sesión"
+                android:textColor="#174BFF"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+
+        </LinearLayout>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</ScrollView>

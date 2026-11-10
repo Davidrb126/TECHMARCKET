@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="#FFFFFF"
+    android:padding="4dp">
+
+    <!-- Titular -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Nombre del titular"
+        android:textColor="#303030"
+        android:textSize="13sp"
+        android:textStyle="bold"
+        android:layout_marginBottom="7dp" />
+
+    <EditText
+        android:id="@+id/etTitularTarjeta"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:background="@drawable/bg_campo_pago"
+        android:paddingStart="14dp"
+        android:paddingEnd="14dp"
+        android:hint="Ej. Juan Pérez"
+        android:inputType="textCapWords"
+        android:maxLines="1"
+        android:textColor="#202124"
+        android:textColorHint="#999999"
+        android:textSize="14sp"
+        android:importantForAutofill="no" />
+
+    <!-- Últimos cuatro dígitos -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="17dp"
+        android:layout_marginBottom="7dp"
+        android:text="Últimos cuatro dígitos"
+        android:textColor="#303030"
+        android:textSize="13sp"
+        android:textStyle="bold" />
+
+    <EditText
+        android:id="@+id/etUltimosCuatro"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:background="@drawable/bg_campo_pago"
+        android:paddingStart="14dp"
+        android:paddingEnd="14dp"
+        android:hint="0000"
+        android:inputType="number"
+        android:maxLength="4"
+        android:maxLines="1"
+        android:textColor="#202124"
+        android:textColorHint="#999999"
+        android:textSize="14sp"
+        android:importantForAutofill="no" />
+
+    <!-- Fecha de vencimiento -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="17dp"
+        android:layout_marginBottom="7dp"
+        android:text="Fecha de vencimiento"
+        android:textColor="#303030"
+        android:textSize="13sp"
+        android:textStyle="bold" />
+
+    <EditText
+        android:id="@+id/etVencimientoTarjeta"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:background="@drawable/bg_campo_pago"
+        android:paddingStart="14dp"
+        android:paddingEnd="14dp"
+        android:hint="MM/AA"
+        android:inputType="text"
+        android:maxLength="5"
+        android:maxLines="1"
+        android:textColor="#202124"
+        android:textColorHint="#999999"
+        android:textSize="14sp"
+        android:importantForAutofill="no" />
+
+    <!-- Información adicional -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="14dp"
+        android:text="Solo almacenamos los últimos cuatro dígitos de tu tarjeta."
+        android:textColor="#888888"
+        android:textSize="11sp" />
+
+</LinearLayout>

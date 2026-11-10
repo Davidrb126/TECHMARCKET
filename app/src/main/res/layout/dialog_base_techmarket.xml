@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/contenedorDialogoTechMarket"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="22dp"
+    android:background="@android:color/transparent">
+
+    <!-- TÍTULO -->
+    <TextView
+        android:id="@+id/tvTituloDialogo"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Título"
+        android:textColor="#202124"
+        android:textSize="22sp"
+        android:textStyle="bold"
+        android:maxLines="2"/>
+
+    <!-- DESCRIPCIÓN -->
+    <TextView
+        android:id="@+id/tvSubtituloDialogo"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="Descripción del diálogo"
+        android:textColor="#777777"
+        android:textSize="15sp"
+        android:lineSpacingExtra="3dp"/>
+
+    <!-- CONTENIDO DINÁMICO -->
+    <LinearLayout
+        android:id="@+id/contenedorContenidoDialogo"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_marginTop="20dp"/>
+
+    <!-- BOTONES -->
+    <LinearLayout
+        android:id="@+id/contenedorBotonesDialogo"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="end|center_vertical"
+        android:layout_marginTop="20dp"/>
+
+</LinearLayout>

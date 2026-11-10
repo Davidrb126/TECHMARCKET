@@ -1,0 +1,213 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:fillViewport="true"
+    android:background="#FFFFFF"
+    android:padding="20dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Información de la dirección"
+            android:textColor="#172B5B"
+            android:textSize="17sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="5dp"
+            android:layout_marginBottom="20dp"
+            android:text="Registra los datos para recibir tus compras."
+            android:textColor="#777777"
+            android:textSize="12sp" />
+
+        <!-- Alias -->
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Nombre de la dirección"
+            android:textColor="#25334D"
+            android:textSize="12sp"
+            android:textStyle="bold" />
+
+        <EditText
+            android:id="@+id/etAliasDireccion"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:layout_marginTop="6dp"
+            android:layout_marginBottom="16dp"
+            android:background="@drawable/bg_campo_direccion"
+            android:hint="Ej. Casa, Trabajo, Oficina"
+            android:inputType="textCapWords"
+            android:paddingHorizontal="12dp"
+            android:textColor="#202124"
+            android:textColorHint="#999999"
+            android:textSize="13sp" />
+
+        <!-- Destinatario -->
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Nombre del destinatario"
+            android:textColor="#25334D"
+            android:textSize="12sp"
+            android:textStyle="bold" />
+
+        <EditText
+            android:id="@+id/etNombreDireccion"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:layout_marginTop="6dp"
+            android:layout_marginBottom="16dp"
+            android:background="@drawable/bg_campo_direccion"
+            android:hint="Nombre completo"
+            android:inputType="textCapWords"
+            android:paddingHorizontal="12dp"
+            android:textColor="#202124"
+            android:textColorHint="#999999"
+            android:textSize="13sp" />
+
+        <!-- Teléfono -->
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Número de teléfono"
+            android:textColor="#25334D"
+            android:textSize="12sp"
+            android:textStyle="bold" />
+
+        <EditText
+            android:id="@+id/etTelefonoDireccion"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:layout_marginTop="6dp"
+            android:layout_marginBottom="16dp"
+            android:background="@drawable/bg_campo_direccion"
+            android:hint="Número de contacto"
+            android:inputType="phone"
+            android:paddingHorizontal="12dp"
+            android:textColor="#202124"
+            android:textColorHint="#999999"
+            android:textSize="13sp" />
+
+        <!-- Departamento -->
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Departamento"
+            android:textColor="#25334D"
+            android:textSize="12sp"
+            android:textStyle="bold" />
+
+        <EditText
+            android:id="@+id/etDepartamentoDireccion"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:layout_marginTop="6dp"
+            android:layout_marginBottom="16dp"
+            android:background="@drawable/bg_campo_direccion"
+            android:hint="Departamento"
+            android:inputType="textCapWords"
+            android:paddingHorizontal="12dp"
+            android:textColor="#202124"
+            android:textColorHint="#999999"
+            android:textSize="13sp" />
+
+        <!-- Ciudad -->
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Ciudad o municipio"
+            android:textColor="#25334D"
+            android:textSize="12sp"
+            android:textStyle="bold" />
+
+        <EditText
+            android:id="@+id/etCiudadDireccion"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:layout_marginTop="6dp"
+            android:layout_marginBottom="16dp"
+            android:background="@drawable/bg_campo_direccion"
+            android:hint="Ciudad o municipio"
+            android:inputType="textCapWords"
+            android:paddingHorizontal="12dp"
+            android:textColor="#202124"
+            android:textColorHint="#999999"
+            android:textSize="13sp" />
+
+        <!-- Dirección completa -->
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Dirección completa"
+            android:textColor="#25334D"
+            android:textSize="12sp"
+            android:textStyle="bold" />
+
+        <EditText
+            android:id="@+id/etDireccionCompleta"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:layout_marginTop="6dp"
+            android:layout_marginBottom="16dp"
+            android:background="@drawable/bg_campo_direccion"
+            android:hint="Ej. Calle 10 # 20-30"
+            android:inputType="textCapSentences"
+            android:paddingHorizontal="12dp"
+            android:textColor="#202124"
+            android:textColorHint="#999999"
+            android:textSize="13sp" />
+
+        <!-- Información adicional -->
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Información adicional (opcional)"
+            android:textColor="#25334D"
+            android:textSize="12sp"
+            android:textStyle="bold" />
+
+        <EditText
+            android:id="@+id/etInformacionAdicional"
+            android:layout_width="match_parent"
+            android:layout_height="75dp"
+            android:layout_marginTop="6dp"
+            android:layout_marginBottom="16dp"
+            android:background="@drawable/bg_campo_direccion"
+            android:gravity="top"
+            android:hint="Apartamento, torre, conjunto o indicaciones..."
+            android:inputType="textCapSentences|textMultiLine"
+            android:padding="12dp"
+            android:textColor="#202124"
+            android:textColorHint="#999999"
+            android:textSize="13sp" />
+
+        <!-- Predeterminada -->
+
+        <CheckBox
+            android:id="@+id/checkPredeterminada"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:buttonTint="#0D50FF"
+            android:text="Establecer como dirección predeterminada"
+            android:textColor="#25334D"
+            android:textSize="12sp" />
+
+    </LinearLayout>
+
+</ScrollView>

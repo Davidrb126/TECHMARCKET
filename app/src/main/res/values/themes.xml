@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Tema base de TechMarket -->
+    <style name="Base.Theme.TechMarket" parent="Theme.Material3.Light.NoActionBar">
+
+        <!-- Colores principales -->
+        <item name="colorPrimary">@color/primary</item>
+        <item name="colorOnPrimary">@color/white</item>
+
+        <!-- Colores secundarios -->
+        <item name="colorSecondary">@color/primary</item>
+        <item name="colorOnSecondary">@color/white</item>
+
+        <!-- Fondo y superficies -->
+        <item name="android:windowBackground">@color/background</item>
+        <item name="colorSurface">@color/white</item>
+        <item name="colorOnSurface">@color/text_primary</item>
+
+        <!-- Color de las barras del sistema -->
+        <item name="android:statusBarColor">@color/background</item>
+        <item name="android:navigationBarColor">@color/background</item>
+
+        <!-- Apariencia de los iconos de las barras -->
+        <item name="android:windowLightStatusBar">true</item>
+
+    </style>
+
+    <!-- Tema principal -->
+    <style name="Theme.TechMarket" parent="Base.Theme.TechMarket" />
+
+</resources>

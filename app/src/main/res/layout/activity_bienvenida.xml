@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#003B91">
+
+    <!-- FONDO CON LOS DISPOSITIVOS -->
+    <ImageView
+        android:id="@+id/ivBienvenida"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:src="@drawable/techmarket_bienvenida"
+        android:scaleType="centerCrop"
+        android:contentDescription="Dispositivos tecnológicos de TechMarket" />
+
+    <!-- LOGO Y TEXTOS -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top|center_horizontal"
+        android:layout_marginTop="85dp"
+        android:gravity="center"
+        android:orientation="vertical">
+
+        <!-- ICONO DEL CARRITO -->
+        <ImageView
+            android:id="@+id/ivLogoCarrito"
+            android:layout_width="110dp"
+            android:layout_height="85dp"
+            android:src="@drawable/ic_carrito"
+            android:scaleType="fitCenter"
+            android:contentDescription="Logo de TechMarket" />
+
+        <!-- NOMBRE TECHMARKET -->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:gravity="center"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Tech"
+                android:textColor="#FFFFFF"
+                android:textSize="42sp"
+                android:textStyle="bold"
+                android:includeFontPadding="false" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Market"
+                android:textColor="#69C9FF"
+                android:textSize="42sp"
+                android:textStyle="bold"
+                android:includeFontPadding="false" />
+
+        </LinearLayout>
+
+        <!-- ESLOGAN -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="3dp"
+            android:text="Tecnología a tu alcance"
+            android:textColor="#B8CBE8"
+            android:textSize="17sp"
+            android:letterSpacing="0.08"
+            android:gravity="center" />
+
+    </LinearLayout>
+
+</FrameLayout>

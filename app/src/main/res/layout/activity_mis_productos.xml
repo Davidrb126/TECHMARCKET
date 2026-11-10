@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="#F7F8FA"
+    android:paddingStart="16dp"
+    android:paddingEnd="16dp"
+    android:paddingBottom="12dp">
+
+    <!-- ENCABEZADO -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginTop="50dp"
+        android:layout_marginBottom="24dp">
+
+        <ImageButton
+            android:id="@+id/btnVolverProductos"
+            android:layout_width="42dp"
+            android:layout_height="46dp"
+            android:src="@drawable/ic_arrow_back"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Volver"
+            android:scaleType="centerInside"
+            android:padding="5dp"/>
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Mis productos"
+            android:textColor="#222222"
+            android:textSize="25sp"
+            android:textStyle="bold"
+            android:layout_marginStart="12dp"/>
+
+    </LinearLayout>
+
+    <!-- DESCRIPCIÓN -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Administra los productos de tu tienda"
+        android:textColor="#777777"
+        android:textSize="16sp"
+        android:layout_marginBottom="18dp"/>
+
+    <!-- BOTÓN AGREGAR -->
+    <Button
+        android:id="@+id/btnAgregarProducto"
+        android:layout_width="match_parent"
+        android:layout_height="54dp"
+        android:text="+ Agregar producto"
+        android:textAllCaps="false"
+        android:textSize="17sp"
+        android:textStyle="bold"
+        android:textColor="#FFFFFF"
+        android:backgroundTint="#0755D9"
+        android:layout_marginBottom="20dp"/>
+
+    <!-- CANTIDAD DE PRODUCTOS -->
+    <TextView
+        android:id="@+id/tvCantidadProductos"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="0 productos registrados"
+        android:textColor="#333333"
+        android:textStyle="bold"
+        android:textSize="17sp"
+        android:layout_marginBottom="14dp"/>
+
+    <!-- MENSAJE CUANDO NO HAY PRODUCTOS -->
+    <TextView
+        android:id="@+id/tvMensajeVacio"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Todavía no tienes productos registrados.\nSelecciona «Agregar producto» para publicar el primero."
+        android:textColor="#777777"
+        android:textSize="16sp"
+        android:gravity="center"
+        android:padding="28dp"
+        android:visibility="gone"/>
+
+    <!-- LISTADO DE PRODUCTOS -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvProductosVendedor"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:clipToPadding="false"
+        android:paddingBottom="12dp"/>
+
+</LinearLayout>

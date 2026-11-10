@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="#F7F8FA"
+    android:padding="20dp"
+    android:paddingTop="32dp">
+
+    <!-- ENCABEZADO -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginBottom="24dp">
+
+        <ImageButton
+            android:id="@+id/btnVolverPedidosVendedor"
+            android:layout_width="46dp"
+            android:layout_height="46dp"
+            android:src="@drawable/ic_arrow_back"
+            android:background="@android:color/transparent"
+            android:scaleType="centerInside"
+            android:padding="8dp"
+            android:contentDescription="Volver"/>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:layout_marginStart="10dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Mis pedidos"
+                android:textColor="#222222"
+                android:textSize="25sp"
+                android:textStyle="bold"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Pedidos recibidos en tu tienda"
+                android:textColor="#777777"
+                android:textSize="15sp"/>
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- CANTIDAD DE PEDIDOS -->
+    <TextView
+        android:id="@+id/tvCantidadPedidosVendedor"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="0 pedidos recibidos"
+        android:textColor="#0A54D5"
+        android:textSize="17sp"
+        android:textStyle="bold"
+        android:layout_marginBottom="16dp"/>
+
+    <!-- MENSAJE SIN PEDIDOS -->
+    <TextView
+        android:id="@+id/tvSinPedidosVendedor"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Todavía no has recibido pedidos.\nCuando un comprador adquiera productos de tu tienda, aparecerán aquí."
+        android:textColor="#777777"
+        android:textSize="16sp"
+        android:gravity="center"
+        android:padding="30dp"
+        android:visibility="gone"/>
+
+    <!-- LISTADO DE PEDIDOS -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvPedidosVendedor"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:clipToPadding="false"
+        android:paddingBottom="12dp"/>
+
+</LinearLayout>

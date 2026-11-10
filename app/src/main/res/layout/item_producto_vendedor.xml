@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:gravity="center_vertical"
+    android:background="#FFFFFF"
+    android:padding="13dp"
+    android:layout_marginBottom="10dp"
+    android:elevation="2dp">
+
+    <!-- IMAGEN DEL PRODUCTO -->
+    <ImageView
+        android:id="@+id/imgProductoVendedor"
+        android:layout_width="88dp"
+        android:layout_height="88dp"
+        android:scaleType="centerCrop"
+        android:src="@android:drawable/ic_menu_gallery"
+        android:contentDescription="Imagen del producto"/>
+
+    <!-- INFORMACIÓN DEL PRODUCTO -->
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:layout_marginStart="13dp">
+
+        <!-- NOMBRE -->
+        <TextView
+            android:id="@+id/tvNombreProductoVendedor"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Nombre del producto"
+            android:textColor="#222222"
+            android:textSize="17sp"
+            android:textStyle="bold"
+            android:maxLines="2"/>
+
+        <!-- CATEGORÍA -->
+        <TextView
+            android:id="@+id/tvCategoriaProductoVendedor"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Categoría"
+            android:textColor="#777777"
+            android:textSize="14sp"
+            android:layout_marginTop="3dp"/>
+
+        <!-- PRECIO -->
+        <TextView
+            android:id="@+id/tvPrecioProductoVendedor"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="$ 0"
+            android:textColor="#0755D9"
+            android:textSize="17sp"
+            android:textStyle="bold"
+            android:layout_marginTop="5dp"/>
+
+        <!-- STOCK -->
+        <TextView
+            android:id="@+id/tvStockProductoVendedor"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Stock: 0"
+            android:textColor="#777777"
+            android:textSize="14sp"
+            android:layout_marginTop="3dp"/>
+
+        <!-- ESTADO DEL PRODUCTO -->
+        <Button
+            android:id="@+id/btnEstadoProductoVendedor"
+            android:layout_width="wrap_content"
+            android:layout_height="40dp"
+            android:text="Activo"
+            android:textAllCaps="false"
+            android:textSize="14sp"
+            android:layout_marginTop="6dp"/>
+
+    </LinearLayout>
+
+    <!-- ACCIONES: EDITAR Y ELIMINAR -->
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:layout_marginStart="5dp">
+
+        <!-- BOTÓN EDITAR -->
+        <ImageButton
+            android:id="@+id/btnEditarProductoVendedor"
+            android:layout_width="46dp"
+            android:layout_height="46dp"
+            android:src="@drawable/ic_edit_product"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Editar producto"
+            android:scaleType="centerInside"
+            android:padding="8dp"/>
+
+        <!-- BOTÓN ELIMINAR -->
+        <ImageButton
+            android:id="@+id/btnEliminarProductoVendedor"
+            android:layout_width="46dp"
+            android:layout_height="46dp"
+            android:src="@drawable/ic_delete_product"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Eliminar producto"
+            android:scaleType="centerInside"
+            android:padding="8dp"/>
+
+    </LinearLayout>
+
+</LinearLayout>

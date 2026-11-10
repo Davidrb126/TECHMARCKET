@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="#FFFFFF"
+    android:padding="19dp"
+    android:elevation="2dp"
+    android:layout_marginBottom="12dp">
+
+    <!-- NÚMERO Y ESTADO DEL PEDIDO -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <TextView
+            android:id="@+id/tvNumeroPedidoVendedor"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Pedido TM12345678"
+            android:textColor="#222222"
+            android:textSize="18sp"
+            android:textStyle="bold"/>
+
+        <TextView
+            android:id="@+id/tvEstadoPedidoVendedor"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="En proceso"
+            android:textColor="#0A54D5"
+            android:textSize="14sp"
+            android:textStyle="bold"/>
+    </LinearLayout>
+
+    <!-- FECHA -->
+    <TextView
+        android:id="@+id/tvFechaPedidoVendedor"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Fecha del pedido"
+        android:textColor="#888888"
+        android:textSize="14sp"
+        android:layout_marginTop="7dp"/>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#EEEEEE"
+        android:layout_marginTop="15dp"
+        android:layout_marginBottom="13dp"/>
+
+    <!-- PRODUCTOS -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="PRODUCTOS"
+        android:textColor="#777777"
+        android:textSize="13sp"
+        android:textStyle="bold"/>
+
+    <TextView
+        android:id="@+id/tvProductosPedidoVendedor"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textColor="#333333"
+        android:textSize="15sp"
+        android:lineSpacingExtra="5dp"
+        android:layout_marginTop="9dp"/>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#EEEEEE"
+        android:layout_marginTop="13dp"
+        android:layout_marginBottom="13dp"/>
+
+    <!-- DIRECCIÓN DE ENTREGA -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="DIRECCIÓN DE ENTREGA"
+        android:textColor="#777777"
+        android:textSize="13sp"
+        android:textStyle="bold"/>
+
+    <TextView
+        android:id="@+id/tvDireccionPedidoVendedor"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textColor="#333333"
+        android:textSize="15sp"
+        android:layout_marginTop="6dp"/>
+
+    <!-- MÉTODO DE PAGO -->
+    <TextView
+        android:id="@+id/tvMetodoPagoPedidoVendedor"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textColor="#777777"
+        android:textSize="14sp"
+        android:layout_marginTop="9dp"/>
+
+    <!-- SUBTOTAL -->
+    <TextView
+        android:id="@+id/tvSubtotalPedidoVendedor"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textColor="#0A54D5"
+        android:textSize="17sp"
+        android:textStyle="bold"
+        android:gravity="end"
+        android:layout_marginTop="13dp"/>
+
+</LinearLayout>

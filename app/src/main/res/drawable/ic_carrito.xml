@@ -1,0 +1,37 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="100dp"
+    android:height="80dp"
+    android:viewportWidth="100"
+    android:viewportHeight="80">
+
+    <!-- Mango blanco del carrito -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M10,9 L21,9 L34,51 L27,54 Z" />
+
+    <!-- Unión del mango con la cesta -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M16,13 L80,13 L76,20 L20,20 Z" />
+
+    <!-- Cesta azul claro -->
+    <path
+        android:fillColor="#00BFFF"
+        android:pathData="M23,16 L91,16 L76,49 Q75,52 71,52 L35,52 Z" />
+
+    <!-- Interior azul oscuro para dar profundidad -->
+    <path
+        android:fillColor="#003B91"
+        android:pathData="M32,23 L81,23 L72,44 L39,44 Z" />
+
+    <!-- Primera rueda -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M39,57 A7,7 0,1 0 39,71 A7,7 0,1 0 39,57 Z" />
+
+    <!-- Segunda rueda -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M70,57 A7,7 0,1 0 70,71 A7,7 0,1 0 70,57 Z" />
+
+</vector>

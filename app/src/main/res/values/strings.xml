@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Identidad de la aplicación -->
+    <string name="app_name">TechMarket</string>
+    <string name="app_slogan">Tu tecnología, a un clic</string>
+
+    <!-- Acciones generales -->
+    <string name="btn_continue">Continuar</string>
+    <string name="btn_cancel">Cancelar</string>
+    <string name="btn_save">Guardar</string>
+    <string name="btn_edit">Editar</string>
+    <string name="btn_delete">Eliminar</string>
+    <string name="btn_back">Volver</string>
+    <string name="btn_login">Iniciar sesión</string>
+    <string name="btn_logout">Cerrar sesión</string>
+
+    <!-- Autenticación -->
+    <string name="login_title">Bienvenido a TechMarket</string>
+    <string name="login_subtitle">Ingresa a tu cuenta para continuar</string>
+    <string name="hint_email">Correo electrónico</string>
+    <string name="hint_password">Contraseña</string>
+    <string name="forgot_password">¿Olvidaste tu contraseña?</string>
+    <string name="register_question">¿No tienes una cuenta?</string>
+    <string name="btn_register">Crear cuenta</string>
+
+    <!-- Navegación -->
+    <string name="menu_home">Inicio</string>
+    <string name="menu_catalog">Catálogo</string>
+    <string name="menu_cart">Carrito</string>
+    <string name="menu_profile">Mi perfil</string>
+
+    <!-- Productos -->
+    <string name="section_featured">Productos destacados</string>
+    <string name="section_categories">Categorías</string>
+    <string name="search_products">Buscar productos tecnológicos</string>
+    <string name="btn_add_cart">Agregar al carrito</string>
+
+</resources>

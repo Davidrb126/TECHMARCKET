@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="115dp"
+    android:layout_marginBottom="8dp"
+    android:background="@drawable/bg_tarjeta_pedido"
+    android:gravity="center_vertical"
+    android:orientation="horizontal"
+    android:padding="9dp">
+
+    <ImageView
+        android:id="@+id/imgProductoPedido"
+        android:layout_width="58dp"
+        android:layout_height="58dp"
+        android:background="@drawable/bg_icono_pedido"
+        android:contentDescription="Icono de pedido"
+        android:padding="13dp"
+        android:scaleType="fitCenter"
+        android:src="@drawable/ic_pedido" />
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_marginStart="12dp"
+        android:layout_weight="1"
+        android:gravity="center_vertical"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/tvNumeroPedido"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Pedido #TM12345"
+            android:textColor="#202124"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/tvFechaPedido"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="1dp"
+            android:text="09 de octubre de 2026"
+            android:textColor="#999999"
+            android:textSize="14sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/tvTotalPedido"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="5dp"
+            android:text="$ 175.000"
+            android:textColor="#202124"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/tvEstadoPedido"
+            android:layout_width="wrap_content"
+            android:layout_height="23dp"
+            android:layout_marginTop="4dp"
+            android:background="@drawable/bg_estado_pedido_proceso"
+            android:gravity="center"
+            android:paddingStart="9dp"
+            android:paddingEnd="9dp"
+            android:text="✓ En proceso"
+            android:textColor="#087443"
+            android:textSize="12sp"
+            android:textStyle="bold" />
+
+    </LinearLayout>
+
+</LinearLayout>
