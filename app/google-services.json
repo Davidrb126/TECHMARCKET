@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "972953263582",
+    "project_id": "techmarket070996",
+    "storage_bucket": "techmarket070996.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:972953263582:android:5262128d96910f144fd14f",
+        "android_client_info": {
+          "package_name": "com.techmarket.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCqTqc6hAj89X7_CbljoUF8_REp8TzBqmU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

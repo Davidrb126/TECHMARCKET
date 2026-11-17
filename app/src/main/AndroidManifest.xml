@@ -2,6 +2,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <!-- Permiso para conectarse a Firebase y servicios de Internet -->
+    <uses-permission android:name="android.permission.INTERNET" />
+
     <application
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
@@ -11,19 +14,15 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.TechMarket">
-
         <activity
             android:name=".DetalleProductoActivity"
             android:exported="false" />
-
         <activity
             android:name=".CarritoActivity"
             android:exported="false" />
-
         <activity
             android:name=".DatosEntregaActivity"
             android:exported="false" />
-
         <activity
             android:name=".PasarelaPagoActivity"
             android:exported="false" />
@@ -33,125 +32,102 @@
             android:name=".MainActivity"
             android:exported="true"
             android:windowSoftInputMode="adjustResize">
-
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-
         </activity>
 
-        <!-- Pantalla principal del comprador -->
+        <!-- Comprador -->
         <activity
             android:name=".InicioCompradorActivity"
             android:exported="false" />
-
         <activity
             android:name=".FinalizarCompraActivity"
             android:exported="false" />
-
         <activity
             android:name=".ConfirmacionCompraActivity"
             android:exported="false" />
-
         <activity
             android:name=".HistorialComprasActivity"
             android:exported="false" />
-
         <activity
             android:name=".PerfilCompradorActivity"
             android:exported="false" />
-
         <activity
             android:name=".MisDatosActivity"
             android:exported="false" />
-
         <activity
             android:name=".DireccionesActivity"
             android:exported="false" />
-
         <activity
             android:name=".MetodosPagoActivity"
             android:exported="false" />
-
         <activity
             android:name=".NotificacionesActivity"
             android:exported="false" />
-
         <activity
             android:name=".CambiarContrasenaActivity"
             android:exported="false" />
 
+        <!-- Vendedor -->
         <activity
             android:name=".RegistroVendedorActivity"
             android:exported="false" />
-
         <activity
             android:name=".RegistroVendedorPaso2Activity"
             android:exported="false" />
-
         <activity
             android:name=".RegistroVendedorPaso3Activity"
             android:exported="false" />
-
         <activity
             android:name=".InicioVendedorActivity"
             android:exported="false" />
-
         <activity
             android:name=".AgregarProductoActivity"
             android:exported="false" />
-
         <activity
             android:name=".MisProductosActivity"
             android:exported="false" />
-
         <activity
             android:name=".PedidosVendedorActivity"
             android:exported="false" />
-
         <activity
             android:name=".DetalleCompraActivity"
             android:exported="false" />
-
         <activity
             android:name=".MiTiendaActivity"
             android:exported="false" />
-
         <activity
             android:name=".PerfilVendedorActivity"
             android:exported="false" />
 
+        <!-- Administrador -->
         <activity
             android:name=".InicioAdministradorActivity"
             android:exported="false" />
-
         <activity
             android:name=".GestionUsuariosActivity"
             android:exported="false" />
-
         <activity
             android:name=".NuevoUsuarioActivity"
             android:exported="false" />
-
         <activity
             android:name=".GestionTiendasActivity"
             android:exported="false" />
-
         <activity
             android:name=".NuevaTiendaActivity"
             android:exported="false" />
-
         <activity
             android:name=".EditarTiendaActivity"
             android:exported="false" />
-
         <activity
             android:name=".GestionCategoriasActivity"
             android:exported="false" />
-
-
+        <activity
+            android:name=".FirebaseTestActivity"
+            android:exported="true" />
 
     </application>
 
