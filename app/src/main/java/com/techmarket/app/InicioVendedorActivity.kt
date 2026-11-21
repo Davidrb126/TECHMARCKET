@@ -30,6 +30,14 @@ class InicioVendedorActivity : AppCompatActivity() {
     private lateinit var imgPerfil: ImageView
 
     private var idTiendaVendedor: Long = -1L
+    private var idUsuarioVendedor: Long = -1L
+    private var tiendasVendedor: List<TiendaVendedor> = emptyList()
+
+    private data class TiendaVendedor(
+        val id: Long,
+        val nombre: String,
+        val logo: String?
+    )
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -42,7 +50,22 @@ class InicioVendedorActivity : AppCompatActivity() {
 
         inicializarComponentes()
         configurarEventos()
+
+        // Restaurar la tienda seleccionada si Android recreó la actividad.
+        idTiendaVendedor = savedInstanceState?.getLong(
+            ESTADO_ID_TIENDA_SELECCIONADA,
+            -1L
+        ) ?: -1L
+
         cargarDatosVendedor()
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        outState.putLong(
+            ESTADO_ID_TIENDA_SELECCIONADA,
+            idTiendaVendedor
+        )
+        super.onSaveInstanceState(outState)
     }
 
     private fun inicializarComponentes() {
@@ -88,7 +111,7 @@ class InicioVendedorActivity : AppCompatActivity() {
                     return
                 }
 
-                val idUsuario = cursor.getLong(
+                idUsuarioVendedor = cursor.getLong(
                     cursor.getColumnIndexOrThrow(
                         DatabaseContract.Usuarios.ID
                     )
@@ -114,13 +137,13 @@ class InicioVendedorActivity : AppCompatActivity() {
 
                 SessionManager.guardarSesion(
                     this,
-                    idUsuario,
+                    idUsuarioVendedor,
                     documento,
                     nombreCompleto,
                     rol
                 )
 
-                cargarTienda(idUsuario)
+                cargarTiendas(idUsuarioVendedor)
             }
 
         } catch (e: Exception) {
@@ -131,64 +154,104 @@ class InicioVendedorActivity : AppCompatActivity() {
         }
     }
 
-    private fun cargarTienda(idUsuario: Long) {
+    private fun cargarTiendas(idUsuario: Long) {
 
         try {
 
-            val cursorTienda =
+            val cursorTiendas =
                 tiendaDAO.consultarTiendaPorUsuario(idUsuario)
 
-            cursorTienda.use { cursor ->
+            val lista = mutableListOf<TiendaVendedor>()
 
-                if (cursor.moveToFirst()) {
-
-                    idTiendaVendedor = cursor.getLong(
+            cursorTiendas.use { cursor ->
+                while (cursor.moveToNext()) {
+                    val id = cursor.getLong(
                         cursor.getColumnIndexOrThrow(
                             DatabaseContract.Tiendas.ID
                         )
                     )
 
-                    val nombreTienda = cursor.getString(
+                    val nombre = cursor.getString(
                         cursor.getColumnIndexOrThrow(
                             DatabaseContract.Tiendas.NOMBRE
                         )
                     ).orEmpty()
 
-                    val logoTienda = cursor.getString(
+                    val logo = cursor.getString(
                         cursor.getColumnIndexOrThrow(
                             DatabaseContract.Tiendas.LOGO
                         )
                     )
 
-                    tvNombreTienda.text = nombreTienda
-
-                    cargarLogoTienda(logoTienda)
-
-                    actualizarTotalProductos()
-                    actualizarTotalPedidos()
-
-                } else {
-
-                    idTiendaVendedor = -1L
-
-                    tvNombreTienda.text = "Tienda no encontrada"
-                    tvTotalProductos.text = "0"
-                    tvTotalPedidos.text = "0"
-
-                    mostrarLogoPredeterminado()
+                    lista.add(
+                        TiendaVendedor(
+                            id = id,
+                            nombre = nombre,
+                            logo = logo
+                        )
+                    )
                 }
+            }
+
+            tiendasVendedor = lista
+
+            if (tiendasVendedor.isEmpty()) {
+                idTiendaVendedor = -1L
+                tvNombreTienda.text = "Tienda no encontrada"
+                tvTotalProductos.text = "0"
+                tvTotalPedidos.text = "0"
+                mostrarLogoPredeterminado()
+                return
+            }
+
+            // Si la tienda seleccionada sigue perteneciendo al vendedor,
+            // se conserva al regresar de otros módulos.
+            val tiendaActual = tiendasVendedor.firstOrNull {
+                it.id == idTiendaVendedor
+            }
+
+            when {
+                tiendaActual != null -> seleccionarTienda(tiendaActual)
+                tiendasVendedor.size == 1 -> seleccionarTienda(tiendasVendedor.first())
+                else -> mostrarSelectorTiendas()
             }
 
         } catch (e: Exception) {
 
-            tvNombreTienda.text =
-                "No fue posible cargar la tienda"
-
+            idTiendaVendedor = -1L
+            tvNombreTienda.text = "No fue posible cargar las tiendas"
             tvTotalProductos.text = "0"
             tvTotalPedidos.text = "0"
-
             mostrarLogoPredeterminado()
         }
+    }
+
+    private fun mostrarSelectorTiendas() {
+
+        if (tiendasVendedor.isEmpty()) {
+            mostrarMensaje("No tienes tiendas asociadas.")
+            return
+        }
+
+        val nombresTiendas = tiendasVendedor.map { it.nombre }.toTypedArray()
+
+        AlertDialog.Builder(this)
+            .setTitle("Seleccionar tienda")
+            .setItems(nombresTiendas) { _, posicion ->
+                seleccionarTienda(tiendasVendedor[posicion])
+            }
+            .setCancelable(true)
+            .show()
+    }
+
+    private fun seleccionarTienda(tienda: TiendaVendedor) {
+
+        idTiendaVendedor = tienda.id
+        tvNombreTienda.text = tienda.nombre
+
+        cargarLogoTienda(tienda.logo)
+        actualizarTotalProductos()
+        actualizarTotalPedidos()
     }
 
     private fun actualizarTotalProductos() {
@@ -301,23 +364,35 @@ class InicioVendedorActivity : AppCompatActivity() {
                 finish()
             }
 
+        // Permite cambiar de tienda desde el nombre mostrado en el panel.
+        tvNombreTienda.setOnClickListener {
+            if (tiendasVendedor.size > 1) {
+                mostrarSelectorTiendas()
+            }
+        }
+
         // MIS PRODUCTOS
         findViewById<View>(R.id.btnMisProductosVendedor)
             .setOnClickListener {
 
                 if (idTiendaVendedor <= 0) {
                     mostrarMensaje(
-                        "No se encontró una tienda asociada al vendedor."
+                        "Selecciona una tienda para continuar."
                     )
                     return@setOnClickListener
                 }
 
-                startActivity(
-                    Intent(
-                        this,
-                        MisProductosActivity::class.java
+                val intent = Intent(
+                    this,
+                    MisProductosActivity::class.java
+                ).apply {
+                    putExtra(
+                        MisProductosActivity.EXTRA_ID_TIENDA,
+                        idTiendaVendedor
                     )
-                )
+                }
+
+                startActivity(intent)
             }
 
         // PEDIDOS RECIBIDOS
@@ -326,7 +401,7 @@ class InicioVendedorActivity : AppCompatActivity() {
 
                 if (idTiendaVendedor <= 0) {
                     mostrarMensaje(
-                        "No se encontró una tienda asociada al vendedor."
+                        "Selecciona una tienda para continuar."
                     )
                     return@setOnClickListener
                 }
@@ -350,17 +425,19 @@ class InicioVendedorActivity : AppCompatActivity() {
 
                 if (idTiendaVendedor <= 0) {
                     mostrarMensaje(
-                        "No se encontró una tienda asociada al vendedor."
+                        "Selecciona una tienda para continuar."
                     )
                     return@setOnClickListener
                 }
 
-                startActivity(
-                    Intent(
-                        this,
-                        MiTiendaActivity::class.java
-                    )
-                )
+                val intent = Intent(
+                    this,
+                    MiTiendaActivity::class.java
+                ).apply {
+                    putExtra("ID_TIENDA", idTiendaVendedor)
+                }
+
+                startActivity(intent)
             }
 
         // MI PERFIL
@@ -442,5 +519,10 @@ class InicioVendedorActivity : AppCompatActivity() {
             mensaje,
             Toast.LENGTH_SHORT
         ).show()
+    }
+
+    companion object {
+        private const val ESTADO_ID_TIENDA_SELECCIONADA =
+            "estado_id_tienda_seleccionada"
     }
 }

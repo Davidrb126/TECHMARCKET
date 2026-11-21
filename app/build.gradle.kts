@@ -65,4 +65,6 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(libs.androidx.junit)
+    // Google Play Services - Geolocalización
+    implementation("com.google.android.gms:play-services-location:21.4.0")
 }

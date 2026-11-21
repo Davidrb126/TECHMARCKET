@@ -2,28 +2,19 @@ package com.techmarket.app
 
 import android.app.Activity
 import android.os.Bundle
+import android.view.View
 import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageView
 import android.widget.Spinner
 import android.widget.Toast
-import android.util.Patterns
 import com.techmarket.app.database.DatabaseProvider
 import com.techmarket.app.database.TiendaDAO
-import com.techmarket.app.database.UsuarioDAO
 
 class NuevaTiendaActivity : Activity() {
 
-    private lateinit var spTipoDocumento: Spinner
-
-    private lateinit var etDocumento: EditText
-    private lateinit var etNombres: EditText
-    private lateinit var etApellidos: EditText
-    private lateinit var etCorreo: EditText
-    private lateinit var etTelefono: EditText
-    private lateinit var etContrasena: EditText
-    private lateinit var etConfirmarContrasena: EditText
+    private lateinit var spVendedor: Spinner
 
     private lateinit var etNombreTienda: EditText
     private lateinit var etDescripcion: EditText
@@ -34,13 +25,33 @@ class NuevaTiendaActivity : Activity() {
     private lateinit var btnCancelar: Button
     private lateinit var btnVolver: ImageView
 
+    private lateinit var tiendaDAO: TiendaDAO
+
+    private val vendedores = mutableListOf<VendedorDisponible>()
+
+    private val textoSeleccionInicial = "Seleccione un vendedor"
+
+    private data class VendedorDisponible(
+        val id: Long,
+        val documento: String,
+        val nombres: String,
+        val apellidos: String,
+        val correo: String
+    ) {
+        fun etiqueta(): String {
+            return "$nombres $apellidos - Documento: $documento"
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_nueva_tienda)
 
+        tiendaDAO = TiendaDAO(this)
+
         inicializarVistas()
-        configurarSpinner()
         configurarEventos()
+        cargarVendedoresDisponibles()
     }
 
     // ==========================================
@@ -51,16 +62,7 @@ class NuevaTiendaActivity : Activity() {
 
         btnVolver = findViewById(R.id.btnVolverNuevaTienda)
 
-        spTipoDocumento = findViewById(R.id.spTipoDocumento)
-
-        etDocumento = findViewById(R.id.etDocumento)
-        etNombres = findViewById(R.id.etNombres)
-        etApellidos = findViewById(R.id.etApellidos)
-        etCorreo = findViewById(R.id.etCorreo)
-        etTelefono = findViewById(R.id.etTelefono)
-        etContrasena = findViewById(R.id.etContrasena)
-        etConfirmarContrasena =
-            findViewById(R.id.etConfirmarContrasena)
+        spVendedor = findViewById(R.id.spVendedor)
 
         etNombreTienda = findViewById(R.id.etNombreTienda)
         etDescripcion = findViewById(R.id.etDescripcion)
@@ -69,6 +71,100 @@ class NuevaTiendaActivity : Activity() {
 
         btnGuardar = findViewById(R.id.btnGuardarTienda)
         btnCancelar = findViewById(R.id.btnCancelarTienda)
+    }
+
+    // ==========================================
+    // CARGAR VENDEDORES ACTIVOS
+    // ==========================================
+
+    private fun cargarVendedoresDisponibles() {
+
+        vendedores.clear()
+
+        val opciones = mutableListOf(textoSeleccionInicial)
+
+        val db = DatabaseProvider.obtenerLectura(this)
+
+        val consulta = """
+            SELECT
+                u.id,
+                u.documento,
+                u.nombres,
+                u.apellidos,
+                u.correo
+            FROM usuarios u
+            WHERE UPPER(TRIM(u.rol)) = 'VENDEDOR'
+              AND u.estado = 1
+            ORDER BY
+                u.nombres COLLATE NOCASE,
+                u.apellidos COLLATE NOCASE
+        """.trimIndent()
+
+        try {
+
+            db.rawQuery(consulta, null).use { cursor ->
+
+                val colId = cursor.getColumnIndexOrThrow("id")
+                val colDocumento = cursor.getColumnIndexOrThrow("documento")
+                val colNombres = cursor.getColumnIndexOrThrow("nombres")
+                val colApellidos = cursor.getColumnIndexOrThrow("apellidos")
+                val colCorreo = cursor.getColumnIndexOrThrow("correo")
+
+                while (cursor.moveToNext()) {
+
+                    val vendedor = VendedorDisponible(
+                        id = cursor.getLong(colId),
+                        documento = cursor.getString(colDocumento) ?: "",
+                        nombres = cursor.getString(colNombres) ?: "",
+                        apellidos = cursor.getString(colApellidos) ?: "",
+                        correo = cursor.getString(colCorreo) ?: ""
+                    )
+
+                    vendedores.add(vendedor)
+                    opciones.add(vendedor.etiqueta())
+                }
+            }
+
+            val adapter = ArrayAdapter(
+                this,
+                android.R.layout.simple_spinner_item,
+                opciones
+            )
+
+            adapter.setDropDownViewResource(
+                android.R.layout.simple_spinner_dropdown_item
+            )
+
+            spVendedor.adapter = adapter
+
+            // Siempre iniciar en el elemento de selección,
+            // nunca en el primer vendedor de la lista.
+            spVendedor.setSelection(0)
+
+            if (vendedores.isEmpty()) {
+
+                btnGuardar.isEnabled = false
+
+                Toast.makeText(
+                    this,
+                    "No existen vendedores activos para asignar.",
+                    Toast.LENGTH_LONG
+                ).show()
+
+            } else {
+                btnGuardar.isEnabled = true
+            }
+
+        } catch (e: Exception) {
+
+            btnGuardar.isEnabled = false
+
+            Toast.makeText(
+                this,
+                "Error al consultar los vendedores: ${e.message}",
+                Toast.LENGTH_LONG
+            ).show()
+        }
     }
 
     // ==========================================
@@ -86,214 +182,104 @@ class NuevaTiendaActivity : Activity() {
         }
 
         btnGuardar.setOnClickListener {
-            registrarVendedorYTienda()
+            registrarTienda()
         }
     }
 
     // ==========================================
-    // CONFIGURAR TIPO DE DOCUMENTO
+    // REGISTRAR TIENDA
     // ==========================================
 
-    private fun configurarSpinner() {
+    private fun registrarTienda() {
 
-        val tipos = listOf(
-            "Cédula de ciudadanía",
-            "Cédula de extranjería",
-            "Pasaporte"
-        )
-
-        val adapter = ArrayAdapter(
-            this,
-            android.R.layout.simple_spinner_item,
-            tipos
-        )
-
-        adapter.setDropDownViewResource(
-            android.R.layout.simple_spinner_dropdown_item
-        )
-
-        spTipoDocumento.adapter = adapter
-    }
-
-    // ==========================================
-    // REGISTRAR VENDEDOR Y TIENDA
-    // ==========================================
-
-    private fun registrarVendedorYTienda() {
-
-        val tipoDocumento =
-            spTipoDocumento.selectedItem.toString()
-
-        val documento =
-            etDocumento.text.toString().trim()
-
-        val nombres =
-            etNombres.text.toString().trim()
-
-        val apellidos =
-            etApellidos.text.toString().trim()
-
-        val correo =
-            etCorreo.text.toString().trim()
-
-        val telefono =
-            etTelefono.text.toString().trim()
-
-        val contrasena =
-            etContrasena.text.toString()
-
-        val confirmar =
-            etConfirmarContrasena.text.toString()
-
-        val nombreTienda =
-            etNombreTienda.text.toString().trim()
-
-        val descripcion =
-            etDescripcion.text.toString().trim()
-
-        val direccion =
-            etDireccion.text.toString().trim()
-
-        val sitioWeb =
-            etSitioWeb.text.toString().trim()
-
-        // ======================================
-        // VALIDAR CAMPOS OBLIGATORIOS
-        // ======================================
-
-        if (
-            documento.isEmpty() ||
-            nombres.isEmpty() ||
-            apellidos.isEmpty() ||
-            correo.isEmpty() ||
-            telefono.isEmpty() ||
-            contrasena.isEmpty() ||
-            confirmar.isEmpty() ||
-            nombreTienda.isEmpty() ||
-            descripcion.isEmpty()
-        ) {
+        if (vendedores.isEmpty()) {
 
             Toast.makeText(
                 this,
-                "Completa todos los campos obligatorios",
+                "No existen vendedores activos para asignar.",
                 Toast.LENGTH_SHORT
             ).show()
 
             return
         }
 
-        // ======================================
-        // VALIDAR CORREO
-        // ======================================
+        // La posición 0 corresponde al texto:
+        // "Seleccione un vendedor".
+        val posicionSeleccionada = spVendedor.selectedItemPosition
 
-        if (!Patterns.EMAIL_ADDRESS.matcher(correo).matches()) {
+        if (posicionSeleccionada <= 0) {
 
-            etCorreo.error = "Correo electrónico no válido"
-            etCorreo.requestFocus()
+            Toast.makeText(
+                this,
+                "Selecciona un vendedor responsable.",
+                Toast.LENGTH_SHORT
+            ).show()
+
+            spVendedor.performClick()
+            return
+        }
+
+        // Se resta 1 porque la posición 0 es el texto inicial.
+        val indiceVendedor = posicionSeleccionada - 1
+
+        if (indiceVendedor !in vendedores.indices) {
+
+            Toast.makeText(
+                this,
+                "Selecciona un vendedor válido.",
+                Toast.LENGTH_SHORT
+            ).show()
 
             return
         }
 
+        val nombreTienda = etNombreTienda.text.toString().trim()
+        val descripcion = etDescripcion.text.toString().trim()
+        val direccion = etDireccion.text.toString().trim()
+        val sitioWeb = etSitioWeb.text.toString().trim()
+
         // ======================================
-        // VALIDAR CONTRASEÑA
+        // VALIDAR CAMPOS OBLIGATORIOS
         // ======================================
 
-        if (contrasena.length < 6) {
+        if (nombreTienda.isBlank()) {
 
-            etContrasena.error =
-                "La contraseña debe tener mínimo 6 caracteres"
-
-            etContrasena.requestFocus()
-
+            etNombreTienda.error = "Ingresa el nombre de la tienda"
+            etNombreTienda.requestFocus()
             return
         }
 
-        if (contrasena != confirmar) {
+        if (descripcion.isBlank()) {
 
-            etConfirmarContrasena.error =
-                "Las contraseñas no coinciden"
-
-            etConfirmarContrasena.requestFocus()
-
+            etDescripcion.error = "Ingresa la descripción de la tienda"
+            etDescripcion.requestFocus()
             return
         }
 
-        // ======================================
-        // PREPARAR DAO Y BASE DE DATOS
-        // ======================================
-
-        val usuarioDAO = UsuarioDAO(this)
-        val tiendaDAO = TiendaDAO(this)
-
-        val db = DatabaseProvider.obtenerEscritura(this)
-
-        val passwordHash =
-            PasswordUtils.generarHashContrasena(contrasena)
+        val vendedorSeleccionado = vendedores[indiceVendedor]
 
         btnGuardar.isEnabled = false
 
-        var transaccionIniciada = false
-
         try {
 
-            // ==================================
-            // INICIAR TRANSACCIÓN
-            // ==================================
-
-            db.beginTransaction()
-            transaccionIniciada = true
-
-            // ==================================
-            // REGISTRAR VENDEDOR
-            // ==================================
-
-            val idUsuario = usuarioDAO.registrarUsuario(
-                tipoDocumento = tipoDocumento,
-                documento = documento,
-                nombres = nombres,
-                apellidos = apellidos,
-                correo = correo,
-                passwordHash = passwordHash,
-                rol = "VENDEDOR",
-                telefono = telefono
-            )
-
-            if (idUsuario <= 0L) {
-
-                throw IllegalStateException(
-                    "No fue posible registrar el vendedor. Verifica si el documento ya existe."
-                )
-            }
-
-            // ==================================
-            // REGISTRAR TIENDA
-            // ==================================
-
             val idTienda = tiendaDAO.guardarTienda(
-                idUsuario = idUsuario,
+                idUsuario = vendedorSeleccionado.id,
                 nombreTienda = nombreTienda,
                 descripcion = descripcion,
                 logo = null,
-                direccion = direccion,
-                sitioWebRedes = sitioWeb
+                direccion = direccion.ifBlank { null },
+                sitioWebRedes = sitioWeb.ifBlank { null }
             )
 
             if (idTienda <= 0L) {
-
                 throw IllegalStateException(
                     "No fue posible registrar la tienda."
                 )
             }
 
-            // ==================================
-            // CONFIRMAR TRANSACCIÓN
-            // ==================================
-
-            db.setTransactionSuccessful()
-
             Toast.makeText(
                 this,
-                "Vendedor y tienda registrados correctamente",
+                "Tienda registrada y asignada correctamente.",
                 Toast.LENGTH_LONG
             ).show()
 
@@ -304,20 +290,11 @@ class NuevaTiendaActivity : Activity() {
 
             Toast.makeText(
                 this,
-                e.message
-                    ?: "Ocurrió un error durante el registro",
+                e.message ?: "Ocurrió un error durante el registro.",
                 Toast.LENGTH_LONG
             ).show()
 
         } finally {
-
-            // ==================================
-            // FINALIZAR TRANSACCIÓN
-            // ==================================
-
-            if (transaccionIniciada) {
-                db.endTransaction()
-            }
 
             btnGuardar.isEnabled = true
         }

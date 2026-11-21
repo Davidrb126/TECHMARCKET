@@ -15,7 +15,9 @@ data class Pedido(
     val envio: Long,
     val total: Long,
     val fecha: String,
-    val estado: String = "En proceso"
+    val estado: String = "En proceso",
+    val latitud: Double? = null,
+    val longitud: Double? = null
 )
 
 object PedidoManager {
@@ -30,7 +32,9 @@ object PedidoManager {
 
     private fun obtenerDAO(): PedidoDAO {
         return pedidoDAO
-            ?: throw IllegalStateException("PedidoManager no ha sido inicializado.")
+            ?: throw IllegalStateException(
+                "PedidoManager no ha sido inicializado."
+            )
     }
 
     fun registrarPedido(
@@ -46,7 +50,8 @@ object PedidoManager {
             "No se encontró el documento del comprador."
         }
 
-        val numero = "TM${System.currentTimeMillis().toString().takeLast(8)}"
+        val numero =
+            "TM${System.currentTimeMillis().toString().takeLast(8)}"
 
         val formatoFecha = SimpleDateFormat(
             "dd 'de' MMMM 'de' yyyy",
@@ -64,10 +69,15 @@ object PedidoManager {
             envio = envio,
             total = subtotal + envio,
             fecha = fechaActual,
-            estado = "En proceso"
+            estado = "En proceso",
+            latitud = datosEntrega.latitud,
+            longitud = datosEntrega.longitud
         )
 
-        obtenerDAO().guardarPedido(pedido, documentoComprador)
+        obtenerDAO().guardarPedido(
+            pedido,
+            documentoComprador
+        )
 
         return pedido
     }

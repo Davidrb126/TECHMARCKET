@@ -35,6 +35,10 @@ class NuevoUsuarioActivity : AppCompatActivity() {
         configurarEventos()
     }
 
+    // ==========================================
+    // INICIALIZAR COMPONENTES
+    // ==========================================
+
     private fun inicializarComponentes() {
 
         spTipoDocumento = findViewById(R.id.spTipoDocumentoNuevo)
@@ -50,6 +54,10 @@ class NuevoUsuarioActivity : AppCompatActivity() {
         btnCancelar = findViewById(R.id.btnCancelarNuevoUsuario)
         btnVolver = findViewById(R.id.btnVolverNuevoUsuario)
     }
+
+    // ==========================================
+    // CONFIGURAR SELECTORES
+    // ==========================================
 
     private fun configurarSelectores() {
 
@@ -93,6 +101,10 @@ class NuevoUsuarioActivity : AppCompatActivity() {
         spRol.adapter = adaptadorRoles
     }
 
+    // ==========================================
+    // CONFIGURAR EVENTOS
+    // ==========================================
+
     private fun configurarEventos() {
 
         btnGuardar.setOnClickListener {
@@ -107,6 +119,10 @@ class NuevoUsuarioActivity : AppCompatActivity() {
             finish()
         }
     }
+
+    // ==========================================
+    // REGISTRAR USUARIO
+    // ==========================================
 
     private fun registrarUsuario() {
 
@@ -131,7 +147,9 @@ class NuevoUsuarioActivity : AppCompatActivity() {
         val rol =
             spRol.selectedItem?.toString().orEmpty()
 
+        // ==========================================
         // VALIDAR TIPO DE DOCUMENTO
+        // ==========================================
 
         if (spTipoDocumento.selectedItemPosition == 0) {
             Toast.makeText(
@@ -142,7 +160,9 @@ class NuevoUsuarioActivity : AppCompatActivity() {
             return
         }
 
+        // ==========================================
         // VALIDAR DOCUMENTO
+        // ==========================================
 
         if (documento.isBlank()) {
             etDocumento.error = "Ingresa el número de documento"
@@ -150,7 +170,9 @@ class NuevoUsuarioActivity : AppCompatActivity() {
             return
         }
 
+        // ==========================================
         // VALIDAR NOMBRES
+        // ==========================================
 
         if (nombres.isBlank()) {
             etNombres.error = "Ingresa los nombres"
@@ -158,7 +180,9 @@ class NuevoUsuarioActivity : AppCompatActivity() {
             return
         }
 
+        // ==========================================
         // VALIDAR APELLIDOS
+        // ==========================================
 
         if (apellidos.isBlank()) {
             etApellidos.error = "Ingresa los apellidos"
@@ -166,7 +190,9 @@ class NuevoUsuarioActivity : AppCompatActivity() {
             return
         }
 
+        // ==========================================
         // VALIDAR CORREO
+        // ==========================================
 
         if (correo.isBlank()) {
             etCorreo.error = "Ingresa el correo electrónico"
@@ -180,7 +206,9 @@ class NuevoUsuarioActivity : AppCompatActivity() {
             return
         }
 
+        // ==========================================
         // VALIDAR ROL
+        // ==========================================
 
         if (spRol.selectedItemPosition == 0) {
             Toast.makeText(
@@ -191,7 +219,9 @@ class NuevoUsuarioActivity : AppCompatActivity() {
             return
         }
 
+        // ==========================================
         // VALIDAR CONTRASEÑA
+        // ==========================================
 
         if (contrasena.isBlank()) {
             etContrasena.error = "Ingresa una contraseña"
@@ -206,7 +236,9 @@ class NuevoUsuarioActivity : AppCompatActivity() {
             return
         }
 
+        // ==========================================
         // GENERAR HASH DE LA CONTRASEÑA
+        // ==========================================
 
         val passwordHash = try {
             PasswordUtils.generarHashContrasena(contrasena)
@@ -219,7 +251,11 @@ class NuevoUsuarioActivity : AppCompatActivity() {
             return
         }
 
-        // REGISTRAR MEDIANTE USUARIODAO
+        // ==========================================
+        // REGISTRAR USUARIO EN SQLITE
+        // ==========================================
+
+        btnGuardar.isEnabled = false
 
         val usuarioDAO = UsuarioDAO(this)
 
@@ -237,6 +273,8 @@ class NuevoUsuarioActivity : AppCompatActivity() {
 
             if (resultado == -1L) {
 
+                btnGuardar.isEnabled = true
+
                 Toast.makeText(
                     this,
                     "Ya existe un usuario con ese documento o no fue posible registrarlo.",
@@ -246,16 +284,44 @@ class NuevoUsuarioActivity : AppCompatActivity() {
                 return
             }
 
-            Toast.makeText(
-                this,
-                "Usuario creado correctamente.",
-                Toast.LENGTH_LONG
-            ).show()
+            // ==========================================
+            // SINCRONIZAR USUARIO CON FIRESTORE
+            // ==========================================
 
-            setResult(RESULT_OK)
-            finish()
+            FirebaseManager.sincronizarUsuario(
+                tipoDocumento = tipoDocumento,
+                documento = documento,
+                nombres = nombres,
+                apellidos = apellidos,
+                correo = correo,
+                rol = rol,
+                estado = 1
+            ).addOnSuccessListener {
+
+                Toast.makeText(
+                    this,
+                    "Usuario creado y sincronizado correctamente.",
+                    Toast.LENGTH_LONG
+                ).show()
+
+                setResult(RESULT_OK)
+                finish()
+
+            }.addOnFailureListener { error ->
+
+                Toast.makeText(
+                    this,
+                    "El usuario quedó guardado localmente, pero no se pudo sincronizar con Firestore. Error: ${error.localizedMessage}",
+                    Toast.LENGTH_LONG
+                ).show()
+
+                setResult(RESULT_OK)
+                finish()
+            }
 
         } catch (e: Exception) {
+
+            btnGuardar.isEnabled = true
 
             Toast.makeText(
                 this,

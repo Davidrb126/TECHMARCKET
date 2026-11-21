@@ -1,6 +1,5 @@
 package com.techmarket.app
 
-import android.net.Uri
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -64,33 +63,28 @@ class CarritoAdapter(
         holder.precio.text = producto.precio
         holder.cantidad.text = item.cantidad.toString()
 
-        // Mostrar imagen real o imagen predeterminada
+        // Mostrar imagen predeterminada mientras carga la imagen real.
+        holder.imagen.setImageResource(producto.imagenResId)
+
+        // Cargar imagen local o URL de Cloudinary.
         if (!producto.imagenUri.isNullOrBlank()) {
-
-            try {
-                holder.imagen.setImageURI(
-                    Uri.parse(producto.imagenUri)
-                )
-            } catch (e: Exception) {
-                holder.imagen.setImageResource(producto.imagenResId)
-            }
-
-        } else {
-
-            holder.imagen.setImageResource(producto.imagenResId)
+            ImagenesManager.cargar(
+                vista = holder.imagen,
+                origen = producto.imagenUri
+            )
         }
 
-        // Aumentar cantidad
+        // Aumentar cantidad.
         holder.btnAumentar.setOnClickListener {
             onAumentar(item)
         }
 
-        // Disminuir cantidad
+        // Disminuir cantidad.
         holder.btnDisminuir.setOnClickListener {
             onDisminuir(item)
         }
 
-        // Eliminar producto
+        // Eliminar producto.
         holder.btnEliminar.setOnClickListener {
             onEliminar(item)
         }

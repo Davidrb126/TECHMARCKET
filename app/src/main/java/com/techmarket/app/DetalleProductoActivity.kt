@@ -1,7 +1,6 @@
 package com.techmarket.app
 
 import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
 import android.view.GestureDetector
 import android.view.MotionEvent
@@ -114,7 +113,9 @@ class DetalleProductoActivity : AppCompatActivity() {
             intent.getStringExtra("imagenUri4")
         ).forEach { uri ->
 
-            if (!uri.isNullOrBlank()) {
+            if (!uri.isNullOrBlank() &&
+                !imagenesProducto.contains(uri)
+            ) {
                 imagenesProducto.add(uri)
             }
         }
@@ -135,16 +136,15 @@ class DetalleProductoActivity : AppCompatActivity() {
             return
         }
 
-        try {
+        val imagenActual = imagenesProducto[indiceImagenActual]
 
-            imgProducto.setImageURI(
-                Uri.parse(imagenesProducto[indiceImagenActual])
-            )
-
-        } catch (e: Exception) {
-
-            imgProducto.setImageResource(imagenResId)
-        }
+        // ImagenesManager permite cargar tanto imágenes locales
+        // como URL HTTPS de Cloudinary sin bloquear la pantalla.
+        ImagenesManager.cargar(
+            vista = imgProducto,
+            origen = imagenActual,
+            imagenPredeterminada = imagenResId
+        )
     }
 
     // ==========================================

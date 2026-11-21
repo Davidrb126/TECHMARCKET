@@ -22,12 +22,12 @@
                 android:id="@+id/btnVolverDirecciones"
                 android:layout_width="42dp"
                 android:layout_height="42dp"
-                android:gravity="center"
                 android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="Volver"
+                android:gravity="center"
                 android:text="‹"
                 android:textColor="#202124"
-                android:textSize="36sp"
-                android:contentDescription="Volver" />
+                android:textSize="36sp" />
 
             <TextView
                 android:layout_width="wrap_content"
@@ -201,6 +201,33 @@
             android:textSize="17sp"
             android:textStyle="bold" />
 
+        <!-- Botón de geolocalización -->
+        <Button
+            android:id="@+id/btnUsarMiUbicacion"
+            android:layout_width="match_parent"
+            android:layout_height="52dp"
+            android:layout_marginTop="14dp"
+            android:background="@drawable/bg_boton_agregar"
+            android:drawableStart="@android:drawable/ic_menu_mylocation"
+            android:drawablePadding="8dp"
+            android:gravity="center"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:text="Usar mi ubicación"
+            android:textAllCaps="false"
+            android:textColor="#FFFFFF"
+            android:textSize="15sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:text="Obtén automáticamente tu ubicación y verifica los datos antes de continuar."
+            android:textColor="#6B7280"
+            android:textSize="12sp" />
+
+        <!-- Departamento -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -225,6 +252,7 @@
             android:textColorHint="#9CA3AF"
             android:textSize="14sp" />
 
+        <!-- Ciudad o municipio -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -249,6 +277,7 @@
             android:textColorHint="#9CA3AF"
             android:textSize="14sp" />
 
+        <!-- Dirección completa -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -272,6 +301,7 @@
             android:textColorHint="#9CA3AF"
             android:textSize="14sp" />
 
+        <!-- Información adicional -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

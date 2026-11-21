@@ -10,6 +10,7 @@ import android.widget.EditText
 import android.widget.ImageView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 
 class MiTiendaActivity : AppCompatActivity() {
@@ -23,11 +24,16 @@ class MiTiendaActivity : AppCompatActivity() {
     private lateinit var etSitioWeb: EditText
 
     private var idUsuario: Long = -1L
+    private var idTiendaSeleccionada: Long = -1L
     private var logoActual: String? = null
+
+    private data class TiendaVendedor(
+        val id: Long,
+        val nombre: String
+    )
 
     private val selectorLogo =
         registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
-
             if (uri != null) {
                 try {
                     contentResolver.takePersistableUriPermission(
@@ -111,7 +117,6 @@ class MiTiendaActivity : AppCompatActivity() {
         )
 
         cursorUsuario.use { cursor ->
-
             if (!cursor.moveToFirst()) {
                 mostrarMensaje("No se encontró el usuario vendedor.")
                 finish()
@@ -129,8 +134,88 @@ class MiTiendaActivity : AppCompatActivity() {
             return
         }
 
-        // Consultar la tienda asociada al usuario.
-        val cursorTienda = db.query(
+        // Consultar todas las tiendas asociadas al vendedor autenticado.
+        val cursorTiendas = db.query(
+            "tiendas",
+            arrayOf("id_tienda", "nombre_tienda"),
+            "id_usuario = ?",
+            arrayOf(idUsuario.toString()),
+            null,
+            null,
+            "id_tienda ASC"
+        )
+
+        val tiendas = mutableListOf<TiendaVendedor>()
+
+        cursorTiendas.use { cursor ->
+            while (cursor.moveToNext()) {
+                tiendas.add(
+                    TiendaVendedor(
+                        id = cursor.getLong(
+                            cursor.getColumnIndexOrThrow("id_tienda")
+                        ),
+                        nombre = cursor.getString(
+                            cursor.getColumnIndexOrThrow("nombre_tienda")
+                        ).orEmpty()
+                    )
+                )
+            }
+        }
+
+        val idTiendaRecibida = intent.getLongExtra("ID_TIENDA", -1L)
+        val tiendaRecibida = tiendas.firstOrNull {
+            it.id == idTiendaRecibida
+        }
+
+        when {
+            tiendas.isEmpty() -> {
+                mostrarMensaje(
+                    "No se encontró una tienda asociada a este vendedor."
+                )
+                finish()
+            }
+
+            tiendaRecibida != null -> {
+                // Usar la tienda elegida en el panel, siempre que pertenezca
+                // al vendedor autenticado.
+                cargarTiendaSeleccionada(tiendaRecibida.id)
+            }
+
+            tiendas.size == 1 -> {
+                cargarTiendaSeleccionada(tiendas.first().id)
+            }
+
+            else -> {
+                mostrarSelectorTiendas(tiendas)
+            }
+        }
+    }
+
+    private fun mostrarSelectorTiendas(tiendas: List<TiendaVendedor>) {
+
+        val nombresTiendas = tiendas.map { it.nombre }.toTypedArray()
+
+        AlertDialog.Builder(this)
+            .setTitle("Selecciona la tienda")
+            .setItems(nombresTiendas) { _, posicion ->
+                cargarTiendaSeleccionada(tiendas[posicion].id)
+            }
+            .setCancelable(false)
+            .setNegativeButton("Cancelar") { _, _ ->
+                finish()
+            }
+            .show()
+    }
+
+    private fun cargarTiendaSeleccionada(idTienda: Long) {
+
+        if (idTienda <= 0 || idUsuario <= 0) {
+            mostrarMensaje("No se pudo identificar la tienda.")
+            finish()
+            return
+        }
+
+        val cursorTienda = dbHelper.readableDatabase.query(
             "tiendas",
             arrayOf(
                 "id_tienda",
@@ -141,22 +226,25 @@ class MiTiendaActivity : AppCompatActivity() {
                 "direccion",
                 "sitio_web_redes"
             ),
-            "id_usuario = ?",
-            arrayOf(idUsuario.toString()),
+            "id_tienda = ? AND id_usuario = ?",
+            arrayOf(idTienda.toString(), idUsuario.toString()),
             null,
             null,
             null
         )
 
         cursorTienda.use { cursor ->
-
             if (!cursor.moveToFirst()) {
                 mostrarMensaje(
-                    "No se encontró una tienda asociada a este vendedor."
+                    "No se encontró la tienda seleccionada."
                 )
                 finish()
                 return
             }
+
+            idTiendaSeleccionada = cursor.getLong(
+                cursor.getColumnIndexOrThrow("id_tienda")
+            )
 
             etNombre.setText(
                 cursor.getString(
@@ -209,7 +297,6 @@ class MiTiendaActivity : AppCompatActivity() {
         try {
 
             contentResolver.openInputStream(uri)?.use { input ->
-
                 val bitmap = BitmapFactory.decodeStream(input)
 
                 if (bitmap != null) {
@@ -261,14 +348,13 @@ class MiTiendaActivity : AppCompatActivity() {
             return
         }
 
-        if (idUsuario <= 0) {
+        if (idUsuario <= 0 || idTiendaSeleccionada <= 0) {
             mostrarMensaje("No se pudo identificar la tienda.")
             return
         }
 
         // Preparar los datos que se actualizarán.
         val valores = ContentValues().apply {
-
             put("nombre_tienda", nombre)
             put("descripcion", descripcion)
             put("logo", logoActual)
@@ -278,12 +364,15 @@ class MiTiendaActivity : AppCompatActivity() {
 
         try {
 
-            // Actualizar únicamente la tienda del vendedor autenticado.
+            // Actualizar únicamente la tienda seleccionada del vendedor autenticado.
             val resultado = dbHelper.writableDatabase.update(
                 "tiendas",
                 valores,
-                "id_usuario = ?",
-                arrayOf(idUsuario.toString())
+                "id_tienda = ? AND id_usuario = ?",
+                arrayOf(
+                    idTiendaSeleccionada.toString(),
+                    idUsuario.toString()
+                )
             )
 
             if (resultado > 0) {

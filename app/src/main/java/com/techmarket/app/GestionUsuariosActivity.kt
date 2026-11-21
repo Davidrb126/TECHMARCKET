@@ -25,28 +25,24 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
-import androidx.appcompat.app.AppCompatActivity
 
-class GestionUsuariosActivity : AppCompatActivity() {
+class GestionUsuariosActivity : androidx.appcompat.app.AppCompatActivity() {
 
     private lateinit var contenedorUsuarios: LinearLayout
     private lateinit var tvTotalUsuarios: TextView
     private lateinit var etBuscarUsuario: EditText
     private lateinit var btnNuevoUsuario: Button
 
-    // Navegación inferior
     private lateinit var navInicio: LinearLayout
     private lateinit var navUsuarios: LinearLayout
     private lateinit var navTiendas: LinearLayout
     private lateinit var navCategorias: LinearLayout
 
-    // Iconos de navegación
     private lateinit var imgInicio: ImageView
     private lateinit var imgUsuarios: ImageView
     private lateinit var imgTiendas: ImageView
     private lateinit var imgCategorias: ImageView
 
-    // Textos de navegación
     private lateinit var tvInicio: TextView
     private lateinit var tvUsuarios: TextView
     private lateinit var tvTiendas: TextView
@@ -66,14 +62,12 @@ class GestionUsuariosActivity : AppCompatActivity() {
         val estado: String
     )
 
-    // Resultado del formulario de nuevo usuario
     private val registrarUsuarioLauncher =
         registerForActivityResult(
             ActivityResultContracts.StartActivityForResult()
         ) { resultado ->
 
             if (resultado.resultCode == RESULT_OK) {
-
                 cargarUsuarios()
 
                 Toast.makeText(
@@ -106,19 +100,16 @@ class GestionUsuariosActivity : AppCompatActivity() {
 
         btnNuevoUsuario = findViewById(R.id.btnNuevoUsuarioAdmin)
 
-        // Navegación
         navInicio = findViewById(R.id.navInicioAdmin)
         navUsuarios = findViewById(R.id.navUsuariosAdmin)
         navTiendas = findViewById(R.id.navTiendasAdmin)
         navCategorias = findViewById(R.id.navCategoriasAdmin)
 
-        // Iconos
         imgInicio = findViewById(R.id.imgNavInicioAdmin)
         imgUsuarios = findViewById(R.id.imgNavUsuariosAdmin)
         imgTiendas = findViewById(R.id.imgNavTiendasAdmin)
         imgCategorias = findViewById(R.id.imgNavCategoriasAdmin)
 
-        // Textos
         tvInicio = findViewById(R.id.tvNavInicioAdmin)
         tvUsuarios = findViewById(R.id.tvNavUsuariosAdmin)
         tvTiendas = findViewById(R.id.tvNavTiendasAdmin)
@@ -131,12 +122,10 @@ class GestionUsuariosActivity : AppCompatActivity() {
 
     private fun configurarEventos() {
 
-        // Regresar al dashboard
         findViewById<View>(R.id.btnVolverUsuarios).setOnClickListener {
             finish()
         }
 
-        // Abrir formulario de nuevo usuario
         btnNuevoUsuario.setOnClickListener {
 
             val intent = Intent(
@@ -147,7 +136,6 @@ class GestionUsuariosActivity : AppCompatActivity() {
             registrarUsuarioLauncher.launch(intent)
         }
 
-        // Buscador de usuarios
         etBuscarUsuario.addTextChangedListener(object : TextWatcher {
 
             override fun beforeTextChanged(
@@ -169,7 +157,6 @@ class GestionUsuariosActivity : AppCompatActivity() {
             override fun afterTextChanged(s: Editable?) {}
         })
 
-        // Navegación inferior
         navInicio.setOnClickListener {
 
             val intent = Intent(
@@ -185,7 +172,6 @@ class GestionUsuariosActivity : AppCompatActivity() {
             seleccionarOpcion("usuarios")
         }
 
-        // ABRIR GESTIÓN DE TIENDAS
         navTiendas.setOnClickListener {
 
             val intent = Intent(
@@ -196,7 +182,6 @@ class GestionUsuariosActivity : AppCompatActivity() {
             startActivity(intent)
         }
 
-        // ABRIR GESTIÓN DE CATEGORÍAS
         navCategorias.setOnClickListener {
 
             val intent = Intent(
@@ -357,10 +342,7 @@ class GestionUsuariosActivity : AppCompatActivity() {
         }
 
         filtrados.forEach { usuario ->
-
-            contenedorUsuarios.addView(
-                crearTarjetaUsuario(usuario)
-            )
+            contenedorUsuarios.addView(crearTarjetaUsuario(usuario))
         }
     }
 
@@ -368,9 +350,12 @@ class GestionUsuariosActivity : AppCompatActivity() {
     // CREAR TARJETA DE USUARIO
     // =====================================================
 
-    private fun crearTarjetaUsuario(
-        usuario: UsuarioAdmin
-    ): View {
+    private fun crearTarjetaUsuario(usuario: UsuarioAdmin): View {
+
+        // Evento compartido para abrir la edición
+        val abrirEdicion = View.OnClickListener {
+            mostrarDialogoEdicion(usuario)
+        }
 
         val tarjeta = LinearLayout(this).apply {
 
@@ -387,9 +372,7 @@ class GestionUsuariosActivity : AppCompatActivity() {
             isClickable = true
             isFocusable = true
 
-            setOnClickListener {
-                mostrarDialogoEdicion(usuario)
-            }
+            setOnClickListener(abrirEdicion)
         }
 
         val nombre = TextView(this).apply {
@@ -397,14 +380,9 @@ class GestionUsuariosActivity : AppCompatActivity() {
             text = "${usuario.nombres} ${usuario.apellidos}"
             textSize = 18f
 
-            setTextColor(
-                Color.rgb(35, 45, 60)
-            )
+            setTextColor(Color.rgb(35, 45, 60))
 
-            setTypeface(
-                null,
-                Typeface.BOLD
-            )
+            setTypeface(null, Typeface.BOLD)
         }
 
         val documento = crearTexto(
@@ -426,10 +404,7 @@ class GestionUsuariosActivity : AppCompatActivity() {
             text = if (estadoActivo) "Activo" else "Inactivo"
             textSize = 14f
 
-            setTypeface(
-                null,
-                Typeface.BOLD
-            )
+            setTypeface(null, Typeface.BOLD)
 
             setTextColor(
                 if (estadoActivo) {
@@ -448,6 +423,11 @@ class GestionUsuariosActivity : AppCompatActivity() {
             textSize = 12f
             setTextColor(colorSeleccionado)
             setPadding(0, 10, 0, 0)
+
+            isClickable = true
+            isFocusable = true
+
+            setOnClickListener(abrirEdicion)
         }
 
         tarjeta.addView(nombre)
@@ -469,7 +449,6 @@ class GestionUsuariosActivity : AppCompatActivity() {
 
     // =====================================================
     // FORMULARIO DE EDICIÓN DE USUARIO
-    // Utiliza dialog_editar_usuario.xml
     // =====================================================
 
     private fun mostrarDialogoEdicion(usuario: UsuarioAdmin) {
@@ -484,7 +463,6 @@ class GestionUsuariosActivity : AppCompatActivity() {
 
         dialogo.setCancelable(true)
 
-        // Campos
         val documento = dialogo.findViewById<EditText>(
             R.id.etDocumentoEditar
         )
@@ -505,17 +483,14 @@ class GestionUsuariosActivity : AppCompatActivity() {
             R.id.etContrasenaEditar
         )
 
-        // Selector de rol
         val spinnerRol = dialogo.findViewById<Spinner>(
             R.id.spRolEditar
         )
 
-        // Estado
         val switchEstado = dialogo.findViewById<Switch>(
             R.id.swEstadoEditar
         )
 
-        // Botones
         val btnCerrar = dialogo.findViewById<ImageView>(
             R.id.btnCerrarEditarUsuario
         )
@@ -528,20 +503,17 @@ class GestionUsuariosActivity : AppCompatActivity() {
             R.id.btnCancelarEdicionUsuario
         )
 
-        val btnEliminar = dialogo.findViewById<Button>(
-            R.id.btnEliminarUsuario
+        val btnEliminarDefinitivamente = dialogo.findViewById<Button>(
+            R.id.btnEliminarDefinitivamenteUsuario
         )
 
-        // Precargar información
         documento.setText(usuario.documento)
         nombres.setText(usuario.nombres)
         apellidos.setText(usuario.apellidos)
         correo.setText(usuario.correo)
 
-        // Documento no modificable
         documento.isEnabled = false
 
-        // Configurar roles
         val roles = listOf(
             "CLIENTE",
             "VENDEDOR",
@@ -568,7 +540,6 @@ class GestionUsuariosActivity : AppCompatActivity() {
             if (posicionRol >= 0) posicionRol else 0
         )
 
-        // Cargar estado actual
         switchEstado.isChecked = esUsuarioActivo(
             usuario.estado
         )
@@ -588,7 +559,6 @@ class GestionUsuariosActivity : AppCompatActivity() {
             }
         }
 
-        // Cerrar formulario
         btnCerrar.setOnClickListener {
             dialogo.dismiss()
         }
@@ -597,12 +567,10 @@ class GestionUsuariosActivity : AppCompatActivity() {
             dialogo.dismiss()
         }
 
-        // Eliminar usuario (desactivación lógica)
-        btnEliminar.setOnClickListener {
-            confirmarEliminacionUsuario(usuario, dialogo)
+        btnEliminarDefinitivamente.setOnClickListener {
+            confirmarEliminacionDefinitiva(usuario, dialogo, btnEliminarDefinitivamente)
         }
 
-        // Guardar cambios
         btnGuardar.setOnClickListener {
 
             val nombresTexto = nombres.text.toString().trim()
@@ -610,51 +578,40 @@ class GestionUsuariosActivity : AppCompatActivity() {
             val correoTexto = correo.text.toString().trim()
             val contrasenaTexto = contrasena.text.toString()
 
-            // Validar nombres
             if (nombresTexto.isEmpty()) {
-
                 nombres.error = "Ingresa los nombres"
                 nombres.requestFocus()
-
                 return@setOnClickListener
             }
 
-            // Validar apellidos
             if (apellidosTexto.isEmpty()) {
-
                 apellidos.error = "Ingresa los apellidos"
                 apellidos.requestFocus()
-
                 return@setOnClickListener
             }
 
-            // Validar correo
             if (
                 correoTexto.isEmpty() ||
                 !Patterns.EMAIL_ADDRESS.matcher(correoTexto).matches()
             ) {
-
                 correo.error = "Ingresa un correo válido"
                 correo.requestFocus()
-
                 return@setOnClickListener
             }
 
-            // Validar contraseña únicamente si se ingresó una nueva
             if (
                 contrasenaTexto.isNotEmpty() &&
                 contrasenaTexto.length < 8
             ) {
-
                 contrasena.error =
                     "La contraseña debe tener mínimo 8 caracteres"
 
                 contrasena.requestFocus()
-
                 return@setOnClickListener
             }
 
-            // Guardar información
+            btnGuardar.isEnabled = false
+
             guardarCambiosUsuario(
                 documento = usuario.documento,
                 nombres = nombresTexto,
@@ -662,16 +619,14 @@ class GestionUsuariosActivity : AppCompatActivity() {
                 correo = correoTexto,
                 rol = spinnerRol.selectedItem.toString(),
                 activo = switchEstado.isChecked,
-                nuevaContrasena = contrasenaTexto
+                nuevaContrasena = contrasenaTexto,
+                dialogo = dialogo,
+                btnGuardar = btnGuardar
             )
-
-            dialogo.dismiss()
         }
 
-        // Mostrar diálogo
         dialogo.show()
 
-        // Ajustar tamaño y comportamiento de la ventana
         dialogo.window?.apply {
 
             setBackgroundDrawableResource(
@@ -690,7 +645,7 @@ class GestionUsuariosActivity : AppCompatActivity() {
     }
 
     // =====================================================
-    // GUARDAR CAMBIOS EN SQLITE
+    // GUARDAR CAMBIOS EN SQLITE Y FIRESTORE
     // =====================================================
 
     private fun guardarCambiosUsuario(
@@ -700,7 +655,9 @@ class GestionUsuariosActivity : AppCompatActivity() {
         correo: String,
         rol: String,
         activo: Boolean,
-        nuevaContrasena: String
+        nuevaContrasena: String,
+        dialogo: Dialog,
+        btnGuardar: Button
     ) {
 
         val dbHelper = DatabaseHelper(this)
@@ -714,13 +671,11 @@ class GestionUsuariosActivity : AppCompatActivity() {
                 put("correo", correo)
                 put("rol", rol)
 
-                // Estado: 1 = activo, 0 = inactivo
                 put(
                     "estado",
                     if (activo) 1 else 0
                 )
 
-                // Actualizar contraseña solamente si se ingresó una nueva
                 if (nuevaContrasena.isNotEmpty()) {
 
                     put(
@@ -739,26 +694,53 @@ class GestionUsuariosActivity : AppCompatActivity() {
                 arrayOf(documento)
             )
 
-            if (filasActualizadas > 0) {
+            if (filasActualizadas <= 0) {
 
-                Toast.makeText(
-                    this,
-                    "Usuario actualizado correctamente.",
-                    Toast.LENGTH_SHORT
-                ).show()
-
-                cargarUsuarios()
-
-            } else {
+                btnGuardar.isEnabled = true
 
                 Toast.makeText(
                     this,
                     "No se encontraron cambios para guardar.",
                     Toast.LENGTH_SHORT
                 ).show()
+
+                return
+            }
+
+            FirebaseManager.sincronizarUsuario(
+                tipoDocumento = obtenerTipoDocumentoLocal(documento),
+                documento = documento,
+                nombres = nombres,
+                apellidos = apellidos,
+                correo = correo,
+                rol = rol,
+                estado = if (activo) 1 else 0
+            ).addOnSuccessListener {
+
+                Toast.makeText(
+                    this,
+                    "Usuario actualizado y sincronizado correctamente.",
+                    Toast.LENGTH_LONG
+                ).show()
+
+                dialogo.dismiss()
+                cargarUsuarios()
+
+            }.addOnFailureListener { error ->
+
+                Toast.makeText(
+                    this,
+                    "Cambios guardados en SQLite, pero no sincronizados con Firestore: ${error.localizedMessage}",
+                    Toast.LENGTH_LONG
+                ).show()
+
+                dialogo.dismiss()
+                cargarUsuarios()
             }
 
         } catch (e: Exception) {
+
+            btnGuardar.isEnabled = true
 
             Toast.makeText(
                 this,
@@ -772,71 +754,266 @@ class GestionUsuariosActivity : AppCompatActivity() {
     }
 
     // =====================================================
-    // CONFIRMAR ELIMINACIÓN DEL USUARIO
+    // OBTENER TIPO DE DOCUMENTO DESDE SQLITE
     // =====================================================
 
-    private fun confirmarEliminacionUsuario(
-        usuario: UsuarioAdmin,
-        dialogo: Dialog
-    ) {
-        AlertDialog.Builder(this)
-            .setTitle("Eliminar usuario")
-            .setMessage(
-                "¿Estás seguro de que deseas desactivar a " +
-                        "${usuario.nombres} ${usuario.apellidos}?\n\n" +
-                        "El registro y su historial se conservarán."
+    private fun obtenerTipoDocumentoLocal(documento: String): String {
+
+        val dbHelper = DatabaseHelper(this)
+
+        return try {
+
+            val cursor = dbHelper.readableDatabase.query(
+                "usuarios",
+                arrayOf("tipo_documento"),
+                "documento = ?",
+                arrayOf(documento),
+                null,
+                null,
+                null
             )
-            .setPositiveButton("Sí, eliminar") { _, _ ->
-                eliminarUsuario(usuario, dialogo)
+
+            cursor.use {
+
+                if (it.moveToFirst()) {
+                    it.getString(
+                        it.getColumnIndexOrThrow("tipo_documento")
+                    ) ?: ""
+                } else {
+                    ""
+                }
+            }
+
+        } catch (e: Exception) {
+            ""
+        } finally {
+            dbHelper.close()
+        }
+    }
+
+    // =====================================================
+    // CONFIRMAR ELIMINACIÓN DEFINITIVA
+    // =====================================================
+
+    private fun confirmarEliminacionDefinitiva(
+        usuario: UsuarioAdmin,
+        dialogo: Dialog,
+        boton: Button
+    ) {
+
+        val documentoSesion = SessionManager.obtenerDocumento(this)
+
+        if (usuario.documento == documentoSesion) {
+            Toast.makeText(
+                this,
+                "No puedes eliminar la cuenta que tiene la sesión activa.",
+                Toast.LENGTH_LONG
+            ).show()
+            return
+        }
+
+        if (usuario.rol.equals("VENDEDOR", ignoreCase = true) &&
+            vendedorTieneTienda(usuario.documento)
+        ) {
+            Toast.makeText(
+                this,
+                "No puedes eliminar este vendedor porque tiene una tienda asociada. Primero debes gestionar la tienda.",
+                Toast.LENGTH_LONG
+            ).show()
+            return
+        }
+
+        AlertDialog.Builder(this)
+            .setTitle("Eliminar definitivamente")
+            .setMessage(
+                "¿Deseas eliminar definitivamente a " +
+                        "${usuario.nombres} ${usuario.apellidos}?\n\n" +
+                        "Esta acción no se puede deshacer.\n\n" +
+                        "Los pedidos históricos del comprador se conservarán, " +
+                        "pero dejarán de estar asociados a su cuenta."
+            )
+            .setPositiveButton("Eliminar definitivamente") { _, _ ->
+                eliminarUsuarioDefinitivamente(usuario, dialogo, boton)
             }
             .setNegativeButton("Cancelar", null)
             .show()
     }
 
+
     // =====================================================
-    // ELIMINACIÓN LÓGICA EN SQLITE
+    // VALIDAR SI EL VENDEDOR TIENE UNA TIENDA
     // =====================================================
 
-    private fun eliminarUsuario(
-        usuario: UsuarioAdmin,
-        dialogo: Dialog
-    ) {
+    private fun vendedorTieneTienda(documento: String): Boolean {
+
         val dbHelper = DatabaseHelper(this)
 
-        try {
-            val valores = ContentValues().apply {
-                put("estado", 0)
-            }
-
-            val filasActualizadas = dbHelper.writableDatabase.update(
-                "usuarios",
-                valores,
-                "documento = ?",
-                arrayOf(usuario.documento)
+        return try {
+            val cursor = dbHelper.readableDatabase.rawQuery(
+                """
+                SELECT COUNT(*)
+                FROM tiendas t
+                INNER JOIN usuarios u ON t.id_usuario = u.id
+                WHERE u.documento = ?
+                """.trimIndent(),
+                arrayOf(documento)
             )
 
-            if (filasActualizadas > 0) {
-                Toast.makeText(
-                    this,
-                    "Usuario eliminado correctamente.",
-                    Toast.LENGTH_SHORT
-                ).show()
-
-                dialogo.dismiss()
-                cargarUsuarios()
-            } else {
-                Toast.makeText(
-                    this,
-                    "No fue posible eliminar el usuario.",
-                    Toast.LENGTH_SHORT
-                ).show()
+            cursor.use {
+                it.moveToFirst() && it.getInt(0) > 0
             }
+
         } catch (e: Exception) {
             Toast.makeText(
                 this,
-                "Error al eliminar el usuario: ${e.message}",
+                "No fue posible validar la tienda asociada: ${e.message}",
                 Toast.LENGTH_LONG
             ).show()
+            // Si no se puede comprobar, se bloquea la eliminación por seguridad.
+            true
+
+        } finally {
+            dbHelper.close()
+        }
+    }
+
+
+    // =====================================================
+    // ELIMINAR DEFINITIVAMENTE EN FIRESTORE Y SQLITE
+    // =====================================================
+
+    private fun eliminarUsuarioDefinitivamente(
+        usuario: UsuarioAdmin,
+        dialogo: Dialog,
+        boton: Button
+    ) {
+
+        // Revalidar justo antes de iniciar la operación.
+        if (usuario.documento == SessionManager.obtenerDocumento(this)) {
+            Toast.makeText(
+                this,
+                "No puedes eliminar la cuenta que tiene la sesión activa.",
+                Toast.LENGTH_LONG
+            ).show()
+            return
+        }
+
+        if (usuario.rol.equals("VENDEDOR", ignoreCase = true) &&
+            vendedorTieneTienda(usuario.documento)
+        ) {
+            Toast.makeText(
+                this,
+                "El vendedor tiene una tienda asociada y no puede eliminarse.",
+                Toast.LENGTH_LONG
+            ).show()
+            return
+        }
+
+        boton.isEnabled = false
+        boton.text = "ELIMINANDO..."
+
+        FirebaseManager.eliminarUsuarioFirestore(usuario.documento)
+            .addOnSuccessListener {
+
+                val resultadoLocal = eliminarUsuarioDeSQLite(usuario)
+
+                if (resultadoLocal) {
+                    // Limpiar una posible asociación biométrica de esta cuenta.
+                    val preferencias = getSharedPreferences(
+                        "techmarket_biometria",
+                        MODE_PRIVATE
+                    )
+
+                    if (preferencias.getString("documento_biometrico", null) == usuario.documento) {
+                        preferencias.edit()
+                            .remove("documento_biometrico")
+                            .apply()
+                    }
+
+                    Toast.makeText(
+                        this,
+                        "Usuario eliminado definitivamente de SQLite y Firestore.",
+                        Toast.LENGTH_LONG
+                    ).show()
+
+                    dialogo.dismiss()
+                    cargarUsuarios()
+
+                } else {
+                    boton.isEnabled = true
+                    boton.text = "ELIMINAR DEFINITIVAMENTE"
+
+                    Toast.makeText(
+                        this,
+                        "El usuario se eliminó de Firestore, pero no fue posible eliminarlo de SQLite. Se requiere revisar la sincronización.",
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
+
+            }
+            .addOnFailureListener { error ->
+
+                boton.isEnabled = true
+                boton.text = "ELIMINAR DEFINITIVAMENTE"
+
+                Toast.makeText(
+                    this,
+                    "No se eliminó el usuario. Firestore informó: ${error.localizedMessage}",
+                    Toast.LENGTH_LONG
+                ).show()
+            }
+    }
+
+
+    // =====================================================
+    // ELIMINAR USUARIO LOCAL Y CONSERVAR PEDIDOS
+    // =====================================================
+
+    private fun eliminarUsuarioDeSQLite(usuario: UsuarioAdmin): Boolean {
+
+        val dbHelper = DatabaseHelper(this)
+
+        return try {
+            val db = dbHelper.writableDatabase
+            db.beginTransaction()
+
+            try {
+                // Los pedidos del comprador se conservan sin el documento personal.
+                if (usuario.rol.equals("CLIENTE", ignoreCase = true)) {
+                    val valoresPedido = ContentValues().apply {
+                        putNull("documento_comprador")
+                    }
+
+                    db.update(
+                        "pedidos",
+                        valoresPedido,
+                        "documento_comprador = ?",
+                        arrayOf(usuario.documento)
+                    )
+                }
+
+                val filasEliminadas = db.delete(
+                    "usuarios",
+                    "documento = ?",
+                    arrayOf(usuario.documento)
+                )
+
+                if (filasEliminadas <= 0) {
+                    throw IllegalStateException(
+                        "No se encontró el usuario en la base de datos local."
+                    )
+                }
+
+                db.setTransactionSuccessful()
+                true
+
+            } finally {
+                db.endTransaction()
+            }
+
+        } catch (e: Exception) {
+            false
+
         } finally {
             dbHelper.close()
         }
@@ -849,10 +1026,7 @@ class GestionUsuariosActivity : AppCompatActivity() {
     private fun esUsuarioActivo(estado: String): Boolean {
 
         return estado == "1" ||
-                estado.equals(
-                    "ACTIVO",
-                    ignoreCase = true
-                )
+                estado.equals("ACTIVO", ignoreCase = true)
     }
 
     // =====================================================
@@ -891,3 +1065,4 @@ class GestionUsuariosActivity : AppCompatActivity() {
         }
     }
 }
+

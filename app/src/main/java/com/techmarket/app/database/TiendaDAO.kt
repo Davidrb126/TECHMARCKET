@@ -8,6 +8,8 @@ import android.database.sqlite.SQLiteConstraintException
 /**
  * DAO encargado de las operaciones relacionadas
  * con las tiendas de los vendedores de TechMarket.
+ *
+ * Un vendedor puede tener varias tiendas.
  */
 class TiendaDAO(context: Context) {
 
@@ -65,7 +67,6 @@ class TiendaDAO(context: Context) {
             put(Tabla.ID_USUARIO, idUsuario)
             put(Tabla.NOMBRE_TIENDA, nombreTienda.trim())
             put(Tabla.DESCRIPCION, descripcion.trim())
-
             put(Tabla.LOGO, logo?.trim()?.takeIf { it.isNotEmpty() })
             put(Tabla.DIRECCION, direccion?.trim()?.takeIf { it.isNotEmpty() })
             put(Tabla.SITIO_WEB_REDES, sitioWebRedes?.trim()?.takeIf { it.isNotEmpty() })
@@ -85,7 +86,7 @@ class TiendaDAO(context: Context) {
     }
 
     // ==========================================
-    // CONSULTAR TIENDA POR USUARIO
+    // CONSULTAR TODAS LAS TIENDAS DE UN VENDEDOR
     // ==========================================
 
     fun consultarTiendaPorUsuario(
@@ -101,19 +102,46 @@ class TiendaDAO(context: Context) {
                 Tabla.DESCRIPCION,
                 Tabla.LOGO,
                 Tabla.DIRECCION,
-                Tabla.SITIO_WEB_REDES
+                Tabla.SITIO_WEB_REDES,
+                Tabla.ESTADO
             ),
             "${Tabla.ID_USUARIO} = ?",
             arrayOf(idUsuario.toString()),
             null,
             null,
-            null
+            "${Tabla.ID} ASC"
         )
     }
 
     // ==========================================
-    // ACTUALIZAR INFORMACIÓN DE UNA TIENDA
-    // MÉTODO UTILIZADO POR EL VENDEDOR
+    // CONTAR TIENDAS ASOCIADAS A UN VENDEDOR
+    // ==========================================
+
+    fun consultarCantidadTiendasPorUsuario(idUsuario: Long): Int {
+
+        if (idUsuario <= 0) return 0
+
+        val consulta = """
+            SELECT COUNT(*)
+            FROM ${Tabla.NOMBRE}
+            WHERE ${Tabla.ID_USUARIO} = ?
+        """.trimIndent()
+
+        return dbLectura.rawQuery(
+            consulta,
+            arrayOf(idUsuario.toString())
+        ).use { cursor ->
+            if (cursor.moveToFirst()) cursor.getInt(0) else 0
+        }
+    }
+
+    // ==========================================
+    // ACTUALIZAR TIENDA DEL VENDEDOR
+    //
+    // Compatibilidad con el método anterior:
+    // solo actualiza si el vendedor tiene exactamente
+    // una tienda. Si tiene varias, devuelve false para
+    // evitar modificar todas accidentalmente.
     // ==========================================
 
     fun actualizarTienda(
@@ -133,10 +161,60 @@ class TiendaDAO(context: Context) {
             return false
         }
 
+        val tiendas = consultarTiendaPorUsuario(idUsuario)
+
+        val idTienda = tiendas.use { cursor ->
+            if (!cursor.moveToFirst()) {
+                return false
+            }
+
+            val id = cursor.getLong(
+                cursor.getColumnIndexOrThrow(Tabla.ID)
+            )
+
+            // Si existe una segunda tienda, no se debe
+            // elegir una arbitrariamente ni actualizar todas.
+            if (cursor.moveToNext()) {
+                return false
+            }
+
+            id
+        }
+
+        return actualizarTiendaPorIdTienda(
+            idTienda = idTienda,
+            nombreTienda = nombreTienda,
+            descripcion = descripcion,
+            logo = logo,
+            direccion = direccion,
+            sitioWebRedes = sitioWebRedes
+        )
+    }
+
+    // ==========================================
+    // ACTUALIZAR UNA TIENDA ESPECÍFICA POR SU ID
+    // ==========================================
+
+    fun actualizarTiendaPorIdTienda(
+        idTienda: Long,
+        nombreTienda: String,
+        descripcion: String,
+        logo: String? = null,
+        direccion: String? = null,
+        sitioWebRedes: String? = null
+    ): Boolean {
+
+        if (
+            idTienda <= 0 ||
+            nombreTienda.isBlank() ||
+            descripcion.isBlank()
+        ) {
+            return false
+        }
+
         val valores = ContentValues().apply {
             put(Tabla.NOMBRE_TIENDA, nombreTienda.trim())
             put(Tabla.DESCRIPCION, descripcion.trim())
-
             put(Tabla.LOGO, logo?.trim()?.takeIf { it.isNotEmpty() })
             put(Tabla.DIRECCION, direccion?.trim()?.takeIf { it.isNotEmpty() })
             put(Tabla.SITIO_WEB_REDES, sitioWebRedes?.trim()?.takeIf { it.isNotEmpty() })
@@ -146,8 +224,8 @@ class TiendaDAO(context: Context) {
             dbEscritura.update(
                 Tabla.NOMBRE,
                 valores,
-                "${Tabla.ID_USUARIO} = ?",
-                arrayOf(idUsuario.toString())
+                "${Tabla.ID} = ?",
+                arrayOf(idTienda.toString())
             ) > 0
         } catch (_: Exception) {
             false

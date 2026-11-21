@@ -15,7 +15,7 @@ class DatabaseHelper(context: Context) :
 
     companion object {
         private const val DATABASE_NAME = "techmarket.db"
-        private const val DATABASE_VERSION = 16
+        private const val DATABASE_VERSION = 19
     }
 
     // ==========================================
@@ -39,6 +39,7 @@ class DatabaseHelper(context: Context) :
     override fun onCreate(db: SQLiteDatabase) {
         crearTablaUsuarios(db)
         crearTablasPedidos(db)
+        crearTablaPedidosPagos(db)
         crearTablaDirecciones(db)
         crearTablaMetodosPago(db)
         crearTablaNotificaciones(db)
@@ -105,7 +106,9 @@ class DatabaseHelper(context: Context) :
                 ${p.TOTAL} INTEGER NOT NULL,
                 ${p.FECHA} TEXT NOT NULL,
                 ${p.ESTADO} TEXT NOT NULL DEFAULT 'En proceso',
-                documento_comprador TEXT
+                documento_comprador TEXT,
+                ${p.LATITUD} REAL,
+                ${p.LONGITUD} REAL
             )
             """.trimIndent()
         )
@@ -266,7 +269,7 @@ class DatabaseHelper(context: Context) :
             """
             CREATE TABLE IF NOT EXISTS ${t.TABLA} (
                 ${t.ID} INTEGER PRIMARY KEY AUTOINCREMENT,
-                ${t.ID_USUARIO} INTEGER NOT NULL UNIQUE,
+                ${t.ID_USUARIO} INTEGER NOT NULL,
                 ${t.NOMBRE} TEXT NOT NULL,
                 ${t.DESCRIPCION} TEXT NOT NULL,
                 ${t.LOGO} TEXT,
@@ -449,6 +452,58 @@ class DatabaseHelper(context: Context) :
             """
             CREATE INDEX IF NOT EXISTS idx_historial_pedido_tienda
             ON pedido_historial_estados(numero_pedido, id_tienda)
+            """.trimIndent()
+        )
+    }
+
+    // ==========================================
+    // TABLA DE PAGOS DE PEDIDOS
+    // ==========================================
+
+    private fun crearTablaPedidosPagos(db: SQLiteDatabase) {
+
+        db.execSQL(
+            """
+            CREATE TABLE IF NOT EXISTS pedido_pagos (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                numero_pedido TEXT NOT NULL,
+                proveedor TEXT NOT NULL DEFAULT 'MERCADO_PAGO',
+                estado TEXT NOT NULL DEFAULT 'PENDIENTE',
+                preference_id TEXT,
+                payment_id TEXT,
+                external_reference TEXT NOT NULL,
+                monto INTEGER NOT NULL,
+                moneda TEXT NOT NULL DEFAULT 'COP',
+                init_point TEXT,
+                sandbox_init_point TEXT,
+                fecha_creacion TEXT NOT NULL,
+                fecha_actualizacion TEXT NOT NULL,
+
+                FOREIGN KEY (numero_pedido)
+                    REFERENCES pedidos(numero_pedido)
+                    ON DELETE CASCADE
+            )
+            """.trimIndent()
+        )
+
+        db.execSQL(
+            """
+            CREATE INDEX IF NOT EXISTS idx_pedido_pagos_numero
+            ON pedido_pagos(numero_pedido)
+            """.trimIndent()
+        )
+
+        db.execSQL(
+            """
+            CREATE INDEX IF NOT EXISTS idx_pedido_pagos_preference
+            ON pedido_pagos(preference_id)
+            """.trimIndent()
+        )
+
+        db.execSQL(
+            """
+            CREATE INDEX IF NOT EXISTS idx_pedido_pagos_payment
+            ON pedido_pagos(payment_id)
             """.trimIndent()
         )
     }
@@ -725,6 +780,106 @@ class DatabaseHelper(context: Context) :
                 )
             }
         }
+
+        // ==========================================
+        // VERSIÓN 17: COORDENADAS DE UBICACIÓN DE PEDIDOS
+        // ==========================================
+
+        if (oldVersion < 17) {
+            db.execSQL(
+                """
+                ALTER TABLE ${DatabaseContract.Pedidos.TABLA}
+                ADD COLUMN ${DatabaseContract.Pedidos.LATITUD} REAL
+                """.trimIndent()
+            )
+
+            db.execSQL(
+                """
+                ALTER TABLE ${DatabaseContract.Pedidos.TABLA}
+                ADD COLUMN ${DatabaseContract.Pedidos.LONGITUD} REAL
+                """.trimIndent()
+            )
+        }
+
+        // ==========================================
+        // VERSIÓN 18: REGISTRO DE PAGOS
+        // ==========================================
+        if (oldVersion < 18) {
+            crearTablaPedidosPagos(db)
+        }
+
+        // ==========================================
+        // VERSIÓN 19: UN VENDEDOR PUEDE TENER VARIAS TIENDAS
+        // ==========================================
+        if (oldVersion < 19) {
+            migrarTiendasVendedorMultiple(db)
+        }
+    }
+
+    /**
+     * Elimina la restricción UNIQUE de tiendas.id_usuario sin perder
+     * tiendas, productos, pedidos por tienda ni su historial.
+     * Las tablas dependientes se respaldan dentro de la misma transacción
+     * de onUpgrade, se recrean y se restauran antes de finalizar.
+     */
+    private fun migrarTiendasVendedorMultiple(db: SQLiteDatabase) {
+        db.execSQL("CREATE TEMP TABLE respaldo_productos_tienda AS SELECT * FROM productos_tienda")
+        db.execSQL("CREATE TEMP TABLE respaldo_pedido_tiendas AS SELECT * FROM pedido_tiendas")
+        db.execSQL("CREATE TEMP TABLE respaldo_pedido_historial_estados AS SELECT * FROM pedido_historial_estados")
+
+        // Eliminar primero las tablas hijas evita que ON DELETE CASCADE
+        // borre registros relacionados al reemplazar la tabla tiendas.
+        db.execSQL("DROP TABLE productos_tienda")
+        db.execSQL("DROP TABLE pedido_tiendas")
+        db.execSQL("DROP TABLE pedido_historial_estados")
+
+        db.execSQL(
+            """
+            CREATE TABLE tiendas_nueva (
+                id_tienda INTEGER PRIMARY KEY AUTOINCREMENT,
+                id_usuario INTEGER NOT NULL,
+                nombre_tienda TEXT NOT NULL,
+                descripcion TEXT NOT NULL,
+                logo TEXT,
+                direccion TEXT,
+                sitio_web_redes TEXT,
+                estado INTEGER NOT NULL DEFAULT 1,
+                FOREIGN KEY (id_usuario)
+                    REFERENCES usuarios(id_usuario)
+                    ON DELETE CASCADE
+            )
+            """.trimIndent()
+        )
+
+        db.execSQL(
+            """
+            INSERT INTO tiendas_nueva (
+                id_tienda, id_usuario, nombre_tienda, descripcion,
+                logo, direccion, sitio_web_redes, estado
+            )
+            SELECT
+                id_tienda, id_usuario, nombre_tienda, descripcion,
+                logo, direccion, sitio_web_redes, estado
+            FROM tiendas
+            """.trimIndent()
+        )
+
+        db.execSQL("DROP TABLE tiendas")
+        db.execSQL("ALTER TABLE tiendas_nueva RENAME TO tiendas")
+        db.execSQL("CREATE INDEX IF NOT EXISTS idx_tiendas_usuario ON tiendas(id_usuario)")
+
+        // Recrear estructura e índices originales y recuperar todos los registros.
+        crearTablaProductosTienda(db)
+        crearTablaPedidosTiendas(db)
+        crearTablaHistorialEstadosPedidos(db)
+
+        db.execSQL("INSERT INTO productos_tienda SELECT * FROM respaldo_productos_tienda")
+        db.execSQL("INSERT INTO pedido_tiendas SELECT * FROM respaldo_pedido_tiendas")
+        db.execSQL("INSERT INTO pedido_historial_estados SELECT * FROM respaldo_pedido_historial_estados")
+
+        db.execSQL("DROP TABLE respaldo_productos_tienda")
+        db.execSQL("DROP TABLE respaldo_pedido_tiendas")
+        db.execSQL("DROP TABLE respaldo_pedido_historial_estados")
     }
 
     // ==========================================

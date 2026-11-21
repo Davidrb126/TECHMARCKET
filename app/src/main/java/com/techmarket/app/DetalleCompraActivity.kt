@@ -1,5 +1,8 @@
 package com.techmarket.app
 
+import android.graphics.Color
+import android.graphics.Typeface
+import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
 import android.view.Gravity
 import android.view.View
@@ -10,6 +13,7 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.techmarket.app.database.DetalleTiendaPedido
 import com.techmarket.app.database.PedidoDAO
+import com.techmarket.app.database.PedidoPagoDAO
 import java.text.NumberFormat
 import java.util.Locale
 
@@ -20,6 +24,7 @@ class DetalleCompraActivity : AppCompatActivity() {
     }
 
     private lateinit var pedidoDAO: PedidoDAO
+    private lateinit var pedidoPagoDAO: PedidoPagoDAO
 
     private lateinit var tvNumeroPedido: TextView
     private lateinit var tvFechaPedido: TextView
@@ -30,11 +35,23 @@ class DetalleCompraActivity : AppCompatActivity() {
     private lateinit var tvDireccion: TextView
     private lateinit var tvMetodoPago: TextView
 
+    // Información del pago
+    private lateinit var tvEstadoPago: TextView
+    private lateinit var tvDescripcionEstadoPago: TextView
+    private lateinit var tvEtiquetaValorPago: TextView
+    private lateinit var tvValorPago: TextView
+    private lateinit var tvProveedorPago: TextView
+
     private lateinit var contenedorProductos: LinearLayout
     private lateinit var contenedorTiendas: LinearLayout
 
     private val formatoMoneda: NumberFormat =
         NumberFormat.getCurrencyInstance(Locale("es", "CO"))
+
+    private val verde = Color.rgb(22, 163, 74)
+    private val rojo = Color.rgb(220, 38, 38)
+    private val naranja = Color.rgb(217, 119, 6)
+    private val azul = Color.rgb(10, 84, 213)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -43,6 +60,7 @@ class DetalleCompraActivity : AppCompatActivity() {
         inicializarVistas()
 
         pedidoDAO = PedidoDAO(this)
+        pedidoPagoDAO = PedidoPagoDAO(this)
 
         findViewById<ImageView>(R.id.btnVolverDetalleCompra).setOnClickListener {
             finish()
@@ -52,6 +70,7 @@ class DetalleCompraActivity : AppCompatActivity() {
     }
 
     private fun inicializarVistas() {
+
         tvNumeroPedido = findViewById(R.id.tvNumeroPedidoDetalle)
         tvFechaPedido = findViewById(R.id.tvFechaPedidoDetalle)
         tvEstadoPedido = findViewById(R.id.tvEstadoPedidoDetalle)
@@ -65,6 +84,15 @@ class DetalleCompraActivity : AppCompatActivity() {
 
         contenedorProductos = findViewById(R.id.contenedorProductosDetalle)
         contenedorTiendas = findViewById(R.id.contenedorTiendasDetalle)
+
+        // Estado del pago
+        tvEstadoPago = findViewById(R.id.tvEstadoPagoDetalle)
+        tvDescripcionEstadoPago =
+            findViewById(R.id.tvDescripcionEstadoPagoDetalle)
+        tvEtiquetaValorPago =
+            findViewById(R.id.tvEtiquetaValorPagoDetalle)
+        tvValorPago = findViewById(R.id.tvValorPagoDetalle)
+        tvProveedorPago = findViewById(R.id.tvProveedorPagoDetalle)
 
         // Tamaños de texto de la información general del pedido
         tvNumeroPedido.textSize = 18f
@@ -82,6 +110,7 @@ class DetalleCompraActivity : AppCompatActivity() {
     }
 
     private fun cargarDetallePedido() {
+
         val numeroPedido = intent.getStringExtra(EXTRA_NUMERO_PEDIDO)
 
         if (numeroPedido.isNullOrBlank()) {
@@ -133,6 +162,7 @@ class DetalleCompraActivity : AppCompatActivity() {
     }
 
     private fun mostrarInformacionPedido(pedido: Pedido) {
+
         tvNumeroPedido.text = "Pedido #${pedido.numeroPedido}"
         tvFechaPedido.text = "Fecha: ${pedido.fecha}"
 
@@ -145,9 +175,181 @@ class DetalleCompraActivity : AppCompatActivity() {
 
         tvDireccion.text = pedido.direccion
         tvMetodoPago.text = pedido.metodoPago
+
+        mostrarEstadoPago(pedido)
     }
 
+    // ==================================================
+    // ESTADO DEL PAGO
+    // ==================================================
+
+    private fun mostrarEstadoPago(pedido: Pedido) {
+
+        val metodo = pedido.metodoPago.trim()
+
+        // El pago contra entrega no utiliza Mercado Pago.
+        if (metodo.contains("contra entrega", ignoreCase = true)) {
+
+            tvEstadoPago.text = "Pendiente de cobro"
+
+            tvDescripcionEstadoPago.text =
+                "Realizarás el pago cuando recibas tu pedido. " +
+                        "El importe todavía no ha sido cobrado."
+
+            tvEtiquetaValorPago.text = "Valor pendiente de cobro"
+            tvValorPago.text = formatearMoneda(pedido.total)
+
+            tvProveedorPago.text = "Cobro al recibir el pedido"
+
+            aplicarEstiloEstadoPago(naranja)
+
+            return
+        }
+
+        // Consultar los intentos de pago electrónico del pedido.
+        val pagos = pedidoPagoDAO.obtenerPagosPorPedido(
+            pedido.numeroPedido
+        )
+
+        // Si existen varios intentos, tomar el más reciente.
+        val pago = pagos.maxByOrNull { it.id }
+
+        if (pago == null) {
+
+            tvEstadoPago.text = "Pendiente de confirmación"
+
+            tvDescripcionEstadoPago.text =
+                "Todavía no hay una transacción electrónica registrada " +
+                        "para este pedido."
+
+            tvEtiquetaValorPago.text = "Valor de la compra"
+            tvValorPago.text = formatearMoneda(pedido.total)
+
+            tvProveedorPago.text = "Mercado Pago"
+
+            aplicarEstiloEstadoPago(naranja)
+
+            return
+        }
+
+        tvProveedorPago.text = when (pago.proveedor.uppercase()) {
+            "MERCADO_PAGO" -> "Mercado Pago"
+            else -> pago.proveedor
+        }
+
+        tvValorPago.text = formatearMoneda(pago.monto)
+
+        when (pago.estado.uppercase()) {
+
+            "APROBADO" -> {
+
+                tvEstadoPago.text = "Pago aprobado"
+
+                tvDescripcionEstadoPago.text =
+                    "Mercado Pago confirmó y acreditó correctamente " +
+                            "tu transacción."
+
+                tvEtiquetaValorPago.text = "Valor pagado"
+
+                aplicarEstiloEstadoPago(verde)
+            }
+
+            "EN_PROCESO" -> {
+
+                tvEstadoPago.text = "Pago en proceso"
+
+                tvDescripcionEstadoPago.text =
+                    "Tu transacción está siendo procesada. " +
+                            "Estamos esperando la confirmación definitiva."
+
+                tvEtiquetaValorPago.text = "Valor de la transacción"
+
+                aplicarEstiloEstadoPago(naranja)
+            }
+
+            "RECHAZADO" -> {
+
+                tvEstadoPago.text = "Pago rechazado"
+
+                tvDescripcionEstadoPago.text =
+                    "Mercado Pago no aprobó la transacción. " +
+                            "Este importe no se considera pagado."
+
+                tvEtiquetaValorPago.text = "Valor del intento"
+
+                aplicarEstiloEstadoPago(rojo)
+            }
+
+            "CANCELADO" -> {
+
+                tvEstadoPago.text = "Pago cancelado"
+
+                tvDescripcionEstadoPago.text =
+                    "La transacción fue cancelada y no se registró " +
+                            "como un pago aprobado."
+
+                tvEtiquetaValorPago.text = "Valor de la transacción"
+
+                aplicarEstiloEstadoPago(naranja)
+            }
+
+            "EXPIRADO" -> {
+
+                tvEstadoPago.text = "Pago expirado"
+
+                tvDescripcionEstadoPago.text =
+                    "La transacción expiró sin completar el pago."
+
+                tvEtiquetaValorPago.text = "Valor de la transacción"
+
+                aplicarEstiloEstadoPago(naranja)
+            }
+
+            else -> {
+
+                tvEstadoPago.text = "Pago pendiente"
+
+                tvDescripcionEstadoPago.text =
+                    "Todavía no recibimos la confirmación definitiva " +
+                            "de Mercado Pago."
+
+                tvEtiquetaValorPago.text = "Valor de la transacción"
+
+                aplicarEstiloEstadoPago(naranja)
+            }
+        }
+    }
+
+    private fun aplicarEstiloEstadoPago(color: Int) {
+
+        tvEstadoPago.setTextColor(color)
+
+        val colorFondo = when (color) {
+            verde -> Color.rgb(220, 252, 231)
+            rojo -> Color.rgb(254, 226, 226)
+            else -> Color.rgb(254, 243, 199)
+        }
+
+        tvEstadoPago.background = GradientDrawable().apply {
+            shape = GradientDrawable.RECTANGLE
+            cornerRadius = dp(30).toFloat()
+            setColor(colorFondo)
+        }
+
+        tvEstadoPago.setPadding(
+            dp(12),
+            dp(7),
+            dp(12),
+            dp(7)
+        )
+    }
+
+    // ==================================================
+    // PRODUCTOS
+    // ==================================================
+
     private fun mostrarProductos(productos: List<CarritoItem>) {
+
         contenedorProductos.removeAllViews()
 
         if (productos.isEmpty()) {
@@ -170,27 +372,27 @@ class DetalleCompraActivity : AppCompatActivity() {
             val nombre = TextView(this).apply {
                 text = producto.nombre
                 textSize = 17f
-                setTextColor(android.graphics.Color.rgb(23, 32, 51))
-                setTypeface(null, android.graphics.Typeface.BOLD)
+                setTextColor(Color.rgb(23, 32, 51))
+                setTypeface(null, Typeface.BOLD)
             }
 
             val cantidad = TextView(this).apply {
                 text = "Cantidad: ${item.cantidad}"
                 textSize = 15f
-                setTextColor(android.graphics.Color.rgb(102, 113, 134))
+                setTextColor(Color.rgb(102, 113, 134))
             }
 
             val precio = TextView(this).apply {
                 text = "Precio unitario: ${producto.precio}"
                 textSize = 15f
-                setTextColor(android.graphics.Color.rgb(102, 113, 134))
+                setTextColor(Color.rgb(102, 113, 134))
             }
 
             val subtotalProducto = TextView(this).apply {
                 text = "Total: ${calcularSubtotalProducto(producto.precio, item.cantidad)}"
                 textSize = 16f
-                setTextColor(android.graphics.Color.rgb(10, 84, 213))
-                setTypeface(null, android.graphics.Typeface.BOLD)
+                setTextColor(Color.rgb(10, 84, 213))
+                setTypeface(null, Typeface.BOLD)
             }
 
             fila.addView(nombre)
@@ -206,7 +408,12 @@ class DetalleCompraActivity : AppCompatActivity() {
         }
     }
 
+    // ==================================================
+    // SEGUIMIENTO DE TIENDAS
+    // ==================================================
+
     private fun mostrarTiendas(tiendas: List<DetalleTiendaPedido>) {
+
         contenedorTiendas.removeAllViews()
 
         if (tiendas.isEmpty()) {
@@ -233,24 +440,24 @@ class DetalleCompraActivity : AppCompatActivity() {
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
             )
-            parametros.bottomMargin = dp(12)
 
+            parametros.bottomMargin = dp(12)
             layoutParams = parametros
         }
 
         val nombreTienda = TextView(this).apply {
             text = tienda.nombreTienda
             textSize = 18f
-            setTextColor(android.graphics.Color.rgb(23, 32, 51))
-            setTypeface(null, android.graphics.Typeface.BOLD)
+            setTextColor(Color.rgb(23, 32, 51))
+            setTypeface(null, Typeface.BOLD)
         }
 
         val estado = TextView(this).apply {
             text = "Estado: ${tienda.estado}"
             textSize = 15f
             setPadding(0, dp(10), 0, dp(10))
-            setTextColor(android.graphics.Color.rgb(10, 84, 213))
-            setTypeface(null, android.graphics.Typeface.BOLD)
+            setTextColor(Color.rgb(10, 84, 213))
+            setTypeface(null, Typeface.BOLD)
         }
 
         tarjeta.addView(nombreTienda)
@@ -262,15 +469,20 @@ class DetalleCompraActivity : AppCompatActivity() {
         tarjeta.addView(tituloProductos)
 
         if (tienda.productos.isEmpty()) {
+
             agregarTexto(tarjeta, "No hay productos registrados.")
+
         } else {
+
             tienda.productos.forEach { item ->
+
                 val texto = TextView(this).apply {
                     text = "• ${item.producto.nombre} x${item.cantidad}"
                     textSize = 15f
-                    setTextColor(android.graphics.Color.rgb(86, 97, 118))
+                    setTextColor(Color.rgb(86, 97, 118))
                     setPadding(0, dp(6), 0, dp(6))
                 }
+
                 tarjeta.addView(texto)
             }
         }
@@ -278,11 +490,15 @@ class DetalleCompraActivity : AppCompatActivity() {
         tarjeta.addView(crearSubtitulo("Historial de seguimiento"))
 
         if (tienda.historial.isEmpty()) {
+
             agregarTexto(tarjeta, "Todavía no hay movimientos registrados.")
+
         } else {
+
             tienda.historial.forEach { movimiento ->
 
                 val textoHistorial = TextView(this).apply {
+
                     text = buildString {
                         append("• ${movimiento.estadoNuevo}")
                         append("\nFecha: ${movimiento.fechaHora}")
@@ -294,7 +510,7 @@ class DetalleCompraActivity : AppCompatActivity() {
                     }
 
                     textSize = 14f
-                    setTextColor(android.graphics.Color.rgb(86, 97, 118))
+                    setTextColor(Color.rgb(86, 97, 118))
                     setPadding(0, dp(9), 0, dp(9))
                     setLineSpacing(dp(2).toFloat(), 1f)
                 }
@@ -306,12 +522,17 @@ class DetalleCompraActivity : AppCompatActivity() {
         contenedorTiendas.addView(tarjeta)
     }
 
+    // ==================================================
+    // COMPONENTES AUXILIARES
+    // ==================================================
+
     private fun crearSubtitulo(texto: String): TextView {
+
         return TextView(this).apply {
             text = texto
             textSize = 15f
-            setTextColor(android.graphics.Color.rgb(23, 32, 51))
-            setTypeface(null, android.graphics.Typeface.BOLD)
+            setTextColor(Color.rgb(23, 32, 51))
+            setTypeface(null, Typeface.BOLD)
             setPadding(0, dp(14), 0, dp(7))
         }
     }
@@ -320,10 +541,11 @@ class DetalleCompraActivity : AppCompatActivity() {
         contenedor: LinearLayout,
         texto: String
     ) {
+
         val vista = TextView(this).apply {
             text = texto
             textSize = 15f
-            setTextColor(android.graphics.Color.rgb(102, 113, 134))
+            setTextColor(Color.rgb(102, 113, 134))
             setPadding(dp(8), dp(8), dp(8), dp(8))
         }
 
@@ -331,8 +553,9 @@ class DetalleCompraActivity : AppCompatActivity() {
     }
 
     private fun agregarSeparador(contenedor: LinearLayout) {
+
         val separador = View(this).apply {
-            setBackgroundColor(android.graphics.Color.rgb(230, 234, 241))
+            setBackgroundColor(Color.rgb(230, 234, 241))
         }
 
         val parametros = LinearLayout.LayoutParams(
@@ -347,11 +570,12 @@ class DetalleCompraActivity : AppCompatActivity() {
         vista: TextView,
         estado: String
     ) {
+
         val color = when (estado) {
-            "Entregado" -> android.graphics.Color.rgb(22, 163, 74)
-            "Cancelado" -> android.graphics.Color.rgb(220, 38, 38)
-            "Enviado" -> android.graphics.Color.rgb(29, 78, 216)
-            else -> android.graphics.Color.rgb(10, 84, 213)
+            "Entregado" -> verde
+            "Cancelado" -> rojo
+            "Enviado" -> Color.rgb(29, 78, 216)
+            else -> azul
         }
 
         vista.setTextColor(color)
@@ -361,6 +585,7 @@ class DetalleCompraActivity : AppCompatActivity() {
         precio: String,
         cantidad: Int
     ): String {
+
         val valor = precio
             .replace("$", "")
             .replace(".", "")

@@ -1,7 +1,6 @@
 package com.techmarket.app
 
 import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
 import android.widget.Button
 import android.widget.ImageButton
@@ -32,6 +31,8 @@ class MisProductosActivity : AppCompatActivity() {
     companion object {
         const val EXTRA_ID_PRODUCTO =
             "com.techmarket.app.EXTRA_ID_PRODUCTO"
+        const val EXTRA_ID_TIENDA =
+            "com.techmarket.app.EXTRA_ID_TIENDA"
     }
 
     private lateinit var usuarioDAO: UsuarioDAO
@@ -83,9 +84,15 @@ class MisProductosActivity : AppCompatActivity() {
 
         findViewById<Button>(R.id.btnAgregarProducto)
             .setOnClickListener {
-                startActivity(
-                    Intent(this, AgregarProductoActivity::class.java)
-                )
+                if (idTienda <= 0) {
+                    mostrarMensaje("Selecciona una tienda antes de agregar productos.")
+                    return@setOnClickListener
+                }
+
+                val intent = Intent(this, AgregarProductoActivity::class.java).apply {
+                    putExtra(EXTRA_ID_TIENDA, idTienda)
+                }
+                startActivity(intent)
             }
 
         obtenerTiendaVendedor()
@@ -110,45 +117,78 @@ class MisProductosActivity : AppCompatActivity() {
         }
 
         try {
+            var idUsuario = -1L
+
             usuarioDAO.consultarUsuario(documento).use { cursorUsuario ->
-
-                if (!cursorUsuario.moveToFirst()) {
-                    mostrarMensaje("No se encontró el usuario.")
-                    finish()
-                    return
-                }
-
-                val idUsuario = cursorUsuario.getLong(
-                    cursorUsuario.getColumnIndexOrThrow(
-                        DatabaseContract.Usuarios.ID
-                    )
-                )
-
-                tiendaDAO.consultarTiendaPorUsuario(idUsuario)
-                    .use { cursorTienda ->
-
-                        if (!cursorTienda.moveToFirst()) {
-                            mostrarMensaje(
-                                "No se encontró la tienda del vendedor."
-                            )
-                            finish()
-                            return
-                        }
-
-                        idTienda = cursorTienda.getLong(
-                            cursorTienda.getColumnIndexOrThrow(
-                                DatabaseContract.Tiendas.ID
-                            )
+                if (cursorUsuario.moveToFirst()) {
+                    idUsuario = cursorUsuario.getLong(
+                        cursorUsuario.getColumnIndexOrThrow(
+                            DatabaseContract.Usuarios.ID
                         )
-                    }
+                    )
+                }
             }
 
-            cargarProductos()
+            if (idUsuario <= 0) {
+                mostrarMensaje("No se encontró el usuario.")
+                finish()
+                return
+            }
+
+            val tiendas = mutableListOf<Pair<Long, String>>()
+
+            tiendaDAO.consultarTiendaPorUsuario(idUsuario).use { cursorTienda ->
+                val indiceId = cursorTienda.getColumnIndexOrThrow(
+                    DatabaseContract.Tiendas.ID
+                )
+                val indiceNombre = cursorTienda.getColumnIndexOrThrow(
+                    DatabaseContract.Tiendas.NOMBRE
+                )
+
+                while (cursorTienda.moveToNext()) {
+                    val id = cursorTienda.getLong(indiceId)
+                    val nombre = cursorTienda.getString(indiceNombre).orEmpty()
+                    tiendas.add(id to nombre)
+                }
+            }
+
+            when {
+                tiendas.isEmpty() -> {
+                    mostrarMensaje("No se encontraron tiendas asociadas al vendedor.")
+                    finish()
+                }
+
+                tiendas.size == 1 -> {
+                    seleccionarTienda(tiendas.first().first)
+                }
+
+                else -> {
+                    val nombresTiendas = tiendas.map { it.second }.toTypedArray()
+                    AlertDialog.Builder(this)
+                        .setTitle("Selecciona la tienda que deseas administrar")
+                        .setItems(nombresTiendas) { _, posicion ->
+                            seleccionarTienda(tiendas[posicion].first)
+                        }
+                        .setCancelable(false)
+                        .show()
+                }
+            }
 
         } catch (e: Exception) {
-            mostrarMensaje("No fue posible consultar la tienda.")
+            mostrarMensaje("No fue posible consultar las tiendas.")
             finish()
         }
+    }
+
+    private fun seleccionarTienda(nuevoIdTienda: Long) {
+        if (nuevoIdTienda <= 0) {
+            mostrarMensaje("La tienda seleccionada no es válida.")
+            finish()
+            return
+        }
+
+        idTienda = nuevoIdTienda
+        cargarProductos()
     }
 
     private fun cargarProductos() {
@@ -235,6 +275,7 @@ class MisProductosActivity : AppCompatActivity() {
             AgregarProductoActivity::class.java
         ).apply {
             putExtra(EXTRA_ID_PRODUCTO, producto.id)
+            putExtra(EXTRA_ID_TIENDA, idTienda)
         }
 
         startActivity(intent)
@@ -389,19 +430,11 @@ class ProductoVendedorAdapter(
             onEliminar(producto)
         }
 
-        holder.imagen.setImageResource(
-            android.R.drawable.ic_menu_gallery
+        // Carga URL de Cloudinary o URI local de forma asíncrona.
+        ImagenesManager.cargar(
+            vista = holder.imagen,
+            origen = producto.imagen
         )
-
-        if (!producto.imagen.isNullOrBlank()) {
-            try {
-                holder.imagen.setImageURI(Uri.parse(producto.imagen))
-            } catch (_: Exception) {
-                holder.imagen.setImageResource(
-                    android.R.drawable.ic_menu_gallery
-                )
-            }
-        }
     }
 
     override fun getItemCount(): Int = productos.size

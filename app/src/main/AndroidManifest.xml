@@ -4,6 +4,9 @@
 
     <!-- Permiso para conectarse a Firebase y servicios de Internet -->
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Permisos para geolocalización -->
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
 
     <application
         android:allowBackup="true"
@@ -127,7 +130,24 @@
             android:exported="false" />
         <activity
             android:name=".FirebaseTestActivity"
-            android:exported="true" />
+            android:exported="false" />
+
+        <activity
+            android:name=".ResultadoPagoActivity"
+            android:exported="true">
+
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data
+                    android:scheme="techmarket"
+                    android:host="payment-return" />
+            </intent-filter>
+
+        </activity>
 
     </application>
 

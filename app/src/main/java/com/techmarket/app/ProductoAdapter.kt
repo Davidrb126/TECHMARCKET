@@ -1,6 +1,5 @@
 package com.techmarket.app
 
-import android.net.Uri
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -15,11 +14,10 @@ class ProductoAdapter(
     private val onAgregarClick: (Producto) -> Unit
 ) : RecyclerView.Adapter<ProductoAdapter.ProductoViewHolder>() {
 
-    // Lista interna independiente de la lista original.
+    // Lista interna modificable para permitir actualizar los filtros.
     private val productos = productos.toMutableList()
 
-    class ProductoViewHolder(itemView: View) :
-        RecyclerView.ViewHolder(itemView) {
+    class ProductoViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
 
         val imagen: ImageView =
             itemView.findViewById(R.id.imgProducto)
@@ -55,66 +53,47 @@ class ProductoAdapter(
 
         val producto = productos[position]
 
-        // INFORMACIÓN DEL PRODUCTO
-
         holder.nombre.text = producto.nombre
         holder.precio.text = producto.precio
         holder.calificacion.text = producto.calificacion
 
-        // RESTABLECER IMAGEN PARA EVITAR IMÁGENES RECICLADAS
-
+        // Imagen predeterminada mientras carga la imagen real.
         holder.imagen.setImageResource(producto.imagenResId)
+        holder.imagen.imageTintList = null
+        holder.imagen.clearColorFilter()
 
-        // CARGAR IMAGEN DESDE URI
+        // Cargar imagen local o URL HTTPS de Cloudinary.
+        if (!producto.imagenUri.isNullOrBlank()) {
 
-        val imagenUri = producto.imagenUri
+            ImagenesManager.cargar(
+                vista = holder.imagen,
+                origen = producto.imagenUri,
+                imagenPredeterminada = producto.imagenResId
+            )
 
-        if (!imagenUri.isNullOrBlank()) {
-            try {
-                holder.imagen.setImageURI(
-                    Uri.parse(imagenUri)
-                )
-            } catch (e: Exception) {
-                holder.imagen.setImageResource(
-                    producto.imagenResId
-                )
-            }
+        } else {
+
+            holder.imagen.tag = null
+            holder.imagen.setImageResource(producto.imagenResId)
         }
-
-        // ABRIR DETALLE DEL PRODUCTO
 
         holder.itemView.setOnClickListener {
             onProductoClick(producto)
         }
-
-        // AGREGAR AL CARRITO
 
         holder.btnAgregar.setOnClickListener {
             onAgregarClick(producto)
         }
     }
 
-    override fun getItemCount(): Int {
-        return productos.size
-    }
+    override fun getItemCount(): Int = productos.size
 
-    // ==========================================
-    // ACTUALIZAR LISTA DE PRODUCTOS
-    // ==========================================
-
-    fun actualizarLista(nuevosProductos: List<Producto>) {
+    // Actualizar productos cuando se aplica un filtro o búsqueda.
+    fun actualizarLista(nuevaLista: List<Producto>) {
 
         productos.clear()
-        productos.addAll(nuevosProductos)
+        productos.addAll(nuevaLista)
 
         notifyDataSetChanged()
-    }
-
-    // ==========================================
-    // OBTENER PRODUCTOS ACTUALES
-    // ==========================================
-
-    fun obtenerProductos(): List<Producto> {
-        return productos.toList()
     }
 }

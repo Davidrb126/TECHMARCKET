@@ -1,9 +1,12 @@
 package com.techmarket.app
 
 import android.content.Intent
+import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Bundle
+import android.provider.MediaStore
+import android.provider.OpenableColumns
 import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.EditText
@@ -14,7 +17,12 @@ import android.widget.Spinner
 import android.widget.Switch
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import com.google.android.gms.tasks.Tasks
+import java.net.HttpURLConnection
+import java.net.URL
+import java.util.concurrent.Executors
 import com.techmarket.app.database.DatabaseContract
 import com.techmarket.app.database.ProductoDAO
 import com.techmarket.app.database.TiendaDAO
@@ -55,6 +63,8 @@ class AgregarProductoActivity : AppCompatActivity() {
     private val esEdicion: Boolean
         get() = idProductoEditar > 0
 
+    private val executorImagenes = Executors.newSingleThreadExecutor()
+
     private val selectorImagen =
         registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
 
@@ -79,6 +89,13 @@ class AgregarProductoActivity : AppCompatActivity() {
                 }
 
                 asignarImagen(uri)
+            }
+        }
+
+    private val tomarFotografia =
+        registerForActivityResult(ActivityResultContracts.TakePicturePreview()) { bitmap ->
+            if (bitmap != null) {
+                guardarFotografiaTemporal(bitmap)
             }
         }
 
@@ -189,11 +206,9 @@ class AgregarProductoActivity : AppCompatActivity() {
         }
 
         try {
-
             var usuarioId = -1L
 
             usuarioDAO.consultarUsuario(documento).use { cursorUsuario ->
-
                 if (cursorUsuario.moveToFirst()) {
                     usuarioId = cursorUsuario.getLong(
                         cursorUsuario.getColumnIndexOrThrow(
@@ -209,34 +224,85 @@ class AgregarProductoActivity : AppCompatActivity() {
                 return
             }
 
-            tiendaDAO.consultarTiendaPorUsuario(usuarioId)
-                .use { cursorTienda ->
+            val tiendas = mutableListOf<Pair<Long, String>>()
 
-                    if (cursorTienda.moveToFirst()) {
-                        idTienda = cursorTienda.getLong(
-                            cursorTienda.getColumnIndexOrThrow(
-                                DatabaseContract.Tiendas.ID
-                            )
-                        )
-                    }
-                }
-
-            if (idTienda <= 0) {
-                mostrarMensaje(
-                    "No se encontró la tienda asociada al vendedor."
+            tiendaDAO.consultarTiendaPorUsuario(usuarioId).use { cursorTienda ->
+                val indiceId = cursorTienda.getColumnIndexOrThrow(
+                    DatabaseContract.Tiendas.ID
                 )
+                val indiceNombre = cursorTienda.getColumnIndexOrThrow(
+                    DatabaseContract.Tiendas.NOMBRE
+                )
+
+                while (cursorTienda.moveToNext()) {
+                    val id = cursorTienda.getLong(indiceId)
+                    val nombre = cursorTienda.getString(indiceNombre).orEmpty()
+                    tiendas.add(id to nombre)
+                }
+            }
+
+            if (tiendas.isEmpty()) {
+                mostrarMensaje("No se encontraron tiendas asociadas al vendedor.")
                 finish()
                 return
             }
 
-            // Si se recibió un ID, cargar el producto para editarlo.
-            if (esEdicion) {
-                cargarProductoParaEditar()
+            // Si la pantalla anterior envió una tienda, se valida que pertenezca
+            // al vendedor autenticado antes de permitir guardar o editar productos.
+            val idTiendaRecibida = intent.getLongExtra(
+                MisProductosActivity.EXTRA_ID_TIENDA,
+                -1L
+            )
+
+            when {
+                idTiendaRecibida > 0 -> {
+                    val tiendaPerteneceAlVendedor = tiendas.any {
+                        it.first == idTiendaRecibida
+                    }
+
+                    if (!tiendaPerteneceAlVendedor) {
+                        mostrarMensaje("La tienda seleccionada no pertenece a tu usuario.")
+                        finish()
+                        return
+                    }
+
+                    seleccionarTienda(idTiendaRecibida)
+                }
+
+                tiendas.size == 1 -> {
+                    seleccionarTienda(tiendas.first().first)
+                }
+
+                else -> {
+                    val nombresTiendas = tiendas.map { it.second }.toTypedArray()
+
+                    AlertDialog.Builder(this)
+                        .setTitle("Selecciona la tienda para el producto")
+                        .setItems(nombresTiendas) { _, posicion ->
+                            seleccionarTienda(tiendas[posicion].first)
+                        }
+                        .setCancelable(false)
+                        .show()
+                }
             }
 
         } catch (e: Exception) {
-            mostrarMensaje("No fue posible consultar la tienda.")
+            mostrarMensaje("No fue posible consultar las tiendas.")
             finish()
+        }
+    }
+
+    private fun seleccionarTienda(nuevoIdTienda: Long) {
+        if (nuevoIdTienda <= 0) {
+            mostrarMensaje("La tienda seleccionada no es válida.")
+            finish()
+            return
+        }
+
+        idTienda = nuevoIdTienda
+
+        if (esEdicion) {
+            cargarProductoParaEditar()
         }
     }
 
@@ -246,8 +312,6 @@ class AgregarProductoActivity : AppCompatActivity() {
 
         try {
 
-            // Primero se comprueba que el producto pertenezca
-            // a la tienda del vendedor que inició sesión.
             var perteneceALaTienda = false
 
             productoDAO.obtenerProductosTienda(idTienda).use { cursor ->
@@ -337,7 +401,6 @@ class AgregarProductoActivity : AppCompatActivity() {
                             )
                         ) == 1
 
-                    // Recuperar las imágenes que ya tiene el producto.
                     imagenPrincipal = obtenerUriImagen(
                         cursor.getString(
                             cursor.getColumnIndexOrThrow(
@@ -370,26 +433,10 @@ class AgregarProductoActivity : AppCompatActivity() {
                         )
                     )
 
-                    // Mostrar las imágenes existentes.
-                    mostrarImagenExistente(
-                        imagenPrincipal,
-                        imgPrincipal
-                    )
-
-                    mostrarImagenExistente(
-                        imagen2,
-                        btnImagen2
-                    )
-
-                    mostrarImagenExistente(
-                        imagen3,
-                        btnImagen3
-                    )
-
-                    mostrarImagenExistente(
-                        imagen4,
-                        btnImagen4
-                    )
+                    mostrarImagenExistente(imagenPrincipal, imgPrincipal)
+                    mostrarImagenExistente(imagen2, btnImagen2)
+                    mostrarImagenExistente(imagen3, btnImagen3)
+                    mostrarImagenExistente(imagen4, btnImagen4)
                 }
 
         } catch (e: Exception) {
@@ -415,31 +462,66 @@ class AgregarProductoActivity : AppCompatActivity() {
         uri: Uri?,
         vista: ImageView
     ) {
+
         if (uri == null) return
 
-        try {
-            val bitmap = contentResolver.openInputStream(uri)?.use { input ->
-                BitmapFactory.decodeStream(input)
+        vista.imageTintList = null
+        vista.clearColorFilter()
+        vista.scaleType = ImageView.ScaleType.CENTER_CROP
+        vista.tag = uri.toString()
+
+        if (uri.scheme == "https" || uri.scheme == "http") {
+
+            executorImagenes.execute {
+                var conexion: HttpURLConnection? = null
+
+                try {
+                    conexion = URL(uri.toString()).openConnection() as HttpURLConnection
+                    conexion.connectTimeout = 15000
+                    conexion.readTimeout = 20000
+                    conexion.requestMethod = "GET"
+
+                    if (conexion.responseCode !in 200..299) {
+                        throw java.io.IOException(
+                            "El servidor respondió HTTP ${conexion.responseCode}"
+                        )
+                    }
+
+                    val bitmap = conexion.inputStream.use { input ->
+                        BitmapFactory.decodeStream(input)
+                    }
+
+                    runOnUiThread {
+                        if (vista.tag == uri.toString() && bitmap != null) {
+                            vista.setImageBitmap(bitmap)
+                        }
+                    }
+                } catch (_: Exception) {
+                    runOnUiThread {
+                        if (vista.tag == uri.toString()) {
+                            mostrarMensaje("No fue posible cargar la imagen remota.")
+                        }
+                    }
+                } finally {
+                    conexion?.disconnect()
+                }
             }
 
-            if (bitmap == null) {
-                mostrarMensaje(
-                    "No fue posible cargar una de las imágenes guardadas."
-                )
-                return
+        } else {
+            try {
+                val bitmap = contentResolver.openInputStream(uri)?.use { input ->
+                    BitmapFactory.decodeStream(input)
+                }
+
+                if (bitmap != null) {
+                    vista.setImageDrawable(null)
+                    vista.setImageBitmap(bitmap)
+                } else {
+                    mostrarMensaje("No fue posible cargar una imagen.")
+                }
+            } catch (_: Exception) {
+                mostrarMensaje("No fue posible mostrar una imagen guardada.")
             }
-
-            vista.imageTintList = null
-            vista.imageTintMode = null
-            vista.clearColorFilter()
-            vista.setImageDrawable(null)
-            vista.setImageBitmap(bitmap)
-            vista.scaleType = ImageView.ScaleType.CENTER_CROP
-
-        } catch (_: Exception) {
-            mostrarMensaje(
-                "No fue posible mostrar una de las imágenes guardadas."
-            )
         }
     }
 
@@ -473,10 +555,59 @@ class AgregarProductoActivity : AppCompatActivity() {
     private fun abrirSelectorImagen(numero: Int) {
 
         imagenSeleccionada = numero
+        mostrarOpcionesImagen()
+    }
 
-        selectorImagen.launch(
-            arrayOf("image/jpeg", "image/png")
+    private fun mostrarOpcionesImagen() {
+
+        val opciones = arrayOf(
+            "Tomar fotografía",
+            "Seleccionar desde galería"
         )
+
+        AlertDialog.Builder(this)
+            .setTitle("Agregar imagen del producto")
+            .setItems(opciones) { _, seleccion ->
+                when (seleccion) {
+                    0 -> tomarFotografia.launch(null)
+                    1 -> selectorImagen.launch(
+                        arrayOf("image/jpeg", "image/png")
+                    )
+                }
+            }
+            .setNegativeButton("Cancelar", null)
+            .show()
+    }
+
+    private fun guardarFotografiaTemporal(bitmap: Bitmap) {
+
+        try {
+            val uriGuardado = MediaStore.Images.Media.insertImage(
+                contentResolver,
+                bitmap,
+                "TechMarket_${System.currentTimeMillis()}",
+                "Fotografía de producto"
+            )
+
+            if (uriGuardado.isNullOrBlank()) {
+                mostrarMensaje("No fue posible guardar la fotografía.")
+                return
+            }
+
+            val uri = Uri.parse(uriGuardado)
+
+            if (!validarImagen(uri)) {
+                mostrarMensaje("La fotografía no es válida o supera los 5 MB.")
+                return
+            }
+
+            asignarImagen(uri)
+
+        } catch (e: Exception) {
+            mostrarMensaje(
+                "Error al guardar la fotografía: ${e.localizedMessage ?: e.message}"
+            )
+        }
     }
 
     private fun validarImagen(uri: Uri): Boolean {
@@ -491,7 +622,7 @@ class AgregarProductoActivity : AppCompatActivity() {
 
             val cursor = contentResolver.query(
                 uri,
-                arrayOf(android.provider.OpenableColumns.SIZE),
+                arrayOf(OpenableColumns.SIZE),
                 null,
                 null,
                 null
@@ -501,9 +632,7 @@ class AgregarProductoActivity : AppCompatActivity() {
 
                 if (it.moveToFirst()) {
 
-                    val indice = it.getColumnIndex(
-                        android.provider.OpenableColumns.SIZE
-                    )
+                    val indice = it.getColumnIndex(OpenableColumns.SIZE)
 
                     if (indice >= 0 && !it.isNull(indice)) {
                         it.getLong(indice)
@@ -524,7 +653,6 @@ class AgregarProductoActivity : AppCompatActivity() {
         }
     }
 
-    // MÉTODO CORREGIDO: mostrar las fotografías sin el tinte azul.
     private fun asignarImagen(uri: Uri) {
 
         when (imagenSeleccionada) {
@@ -563,18 +691,16 @@ class AgregarProductoActivity : AppCompatActivity() {
         }
     }
 
+    // ==========================================
+    // GUARDAR O ACTUALIZAR PRODUCTO
+    // ==========================================
+
     private fun guardarProducto() {
 
         val nombre = etNombre.text.toString().trim()
-
         val categoria = spCategoria.selectedItem?.toString() ?: ""
-
-        val precioTexto = etPrecio.text.toString()
-            .trim()
-            .replace(",", ".")
-
+        val precioTexto = etPrecio.text.toString().trim().replace(",", ".")
         val stockTexto = etStock.text.toString().trim()
-
         val descripcion = etDescripcion.text.toString().trim()
 
         if (nombre.isEmpty()) {
@@ -583,15 +709,12 @@ class AgregarProductoActivity : AppCompatActivity() {
             return
         }
 
-        if (categoria == "Selecciona una categoría" ||
-            categoria.isBlank()
-        ) {
+        if (categoria == "Selecciona una categoría" || categoria.isBlank()) {
             mostrarMensaje("Selecciona una categoría.")
             return
         }
 
         val precio = precioTexto.toDoubleOrNull()
-
         if (precio == null || precio <= 0) {
             etPrecio.error = "Ingresa un precio válido"
             etPrecio.requestFocus()
@@ -599,7 +722,6 @@ class AgregarProductoActivity : AppCompatActivity() {
         }
 
         val stock = stockTexto.toIntOrNull()
-
         if (stock == null || stock < 0) {
             etStock.error = "Ingresa una cantidad válida"
             etStock.requestFocus()
@@ -612,11 +734,8 @@ class AgregarProductoActivity : AppCompatActivity() {
             return
         }
 
-        // En edición se permite conservar la imagen principal existente.
         if (imagenPrincipal == null) {
-            mostrarMensaje(
-                "Debes seleccionar una imagen principal."
-            )
+            mostrarMensaje("Debes seleccionar una imagen principal.")
             return
         }
 
@@ -625,11 +744,74 @@ class AgregarProductoActivity : AppCompatActivity() {
             return
         }
 
+        btnGuardar.isEnabled = false
+        btnGuardar.text = "Subiendo imágenes..."
+
+        val imagenes = listOf(imagenPrincipal, imagen2, imagen3, imagen4)
+        val imagenesFinales = imagenes.map { it?.toString() }.toMutableList()
+        val tareas = mutableListOf<Pair<Int, com.google.android.gms.tasks.Task<String>>>()
+
+        imagenes.forEachIndexed { indice, uri ->
+            if (uri != null && uri.scheme != "https" && uri.scheme != "http") {
+                tareas.add(
+                    indice to CloudinaryManager.subirImagen(this, uri)
+                )
+            }
+        }
+
+        val tareaCarga = if (tareas.isEmpty()) {
+            Tasks.forResult(emptyList<String>())
+        } else {
+            Tasks.whenAllSuccess<String>(tareas.map { it.second })
+        }
+
+        tareaCarga
+            .addOnSuccessListener { urlsSubidas ->
+                tareas.forEachIndexed { indiceTarea, tarea ->
+                    imagenesFinales[tarea.first] = urlsSubidas[indiceTarea]
+                }
+
+                guardarProductoLocalYFirestore(
+                    nombre = nombre,
+                    categoria = categoria,
+                    precio = precio,
+                    stock = stock,
+                    descripcion = descripcion,
+                    imagenes = imagenesFinales
+                )
+            }
+            .addOnFailureListener { error ->
+                restaurarBotonGuardar()
+                mostrarMensaje(
+                    "No fue posible cargar las imágenes en Cloudinary: ${error.localizedMessage ?: error.message}"
+                )
+            }
+    }
+
+    // ==========================================
+    // GUARDAR EN SQLITE Y SINCRONIZAR FIRESTORE
+    // ==========================================
+
+    private fun guardarProductoLocalYFirestore(
+        nombre: String,
+        categoria: String,
+        precio: Double,
+        stock: Int,
+        descripcion: String,
+        imagenes: List<String?>
+    ) {
+
+        val principal = imagenes.getOrNull(0)
+        if (principal.isNullOrBlank()) {
+            restaurarBotonGuardar()
+            mostrarMensaje("No se obtuvo la URL de la imagen principal.")
+            return
+        }
+
         try {
+            val idProducto: Long
 
             if (esEdicion) {
-
-                // Actualizar el producto verificando su tienda propietaria.
                 val actualizado = productoDAO.actualizarProductoTienda(
                     idProducto = idProductoEditar,
                     idTienda = idTienda,
@@ -639,31 +821,21 @@ class AgregarProductoActivity : AppCompatActivity() {
                     stock = stock,
                     descripcion = descripcion,
                     disponible = switchDisponible.isChecked,
-                    imagenPrincipal = imagenPrincipal?.toString(),
-                    imagen2 = imagen2?.toString(),
-                    imagen3 = imagen3?.toString(),
-                    imagen4 = imagen4?.toString()
+                    imagenPrincipal = principal,
+                    imagen2 = imagenes.getOrNull(1),
+                    imagen3 = imagenes.getOrNull(2),
+                    imagen4 = imagenes.getOrNull(3)
                 )
 
-                if (actualizado) {
-
-                    mostrarMensaje(
-                        "Producto actualizado correctamente."
-                    )
-
-                    setResult(RESULT_OK)
-                    finish()
-
-                } else {
-                    mostrarMensaje(
-                        "No fue posible actualizar el producto."
-                    )
+                if (!actualizado) {
+                    restaurarBotonGuardar()
+                    mostrarMensaje("No fue posible actualizar el producto localmente.")
+                    return
                 }
 
+                idProducto = idProductoEditar
             } else {
-
-                // Registrar un producto nuevo.
-                val resultado = productoDAO.guardarProductoTienda(
+                idProducto = productoDAO.guardarProductoTienda(
                     idTienda = idTienda,
                     nombre = nombre,
                     categoria = categoria,
@@ -671,33 +843,72 @@ class AgregarProductoActivity : AppCompatActivity() {
                     stock = stock,
                     descripcion = descripcion,
                     disponible = switchDisponible.isChecked,
-                    imagenPrincipal = imagenPrincipal?.toString(),
-                    imagen2 = imagen2?.toString(),
-                    imagen3 = imagen3?.toString(),
-                    imagen4 = imagen4?.toString()
+                    imagenPrincipal = principal,
+                    imagen2 = imagenes.getOrNull(1),
+                    imagen3 = imagenes.getOrNull(2),
+                    imagen4 = imagenes.getOrNull(3)
                 )
 
-                if (resultado > 0) {
-
-                    mostrarMensaje(
-                        "Producto registrado correctamente."
-                    )
-
-                    setResult(RESULT_OK)
-                    finish()
-
-                } else {
-                    mostrarMensaje(
-                        "No fue posible guardar el producto."
-                    )
+                if (idProducto <= 0) {
+                    restaurarBotonGuardar()
+                    mostrarMensaje("No fue posible guardar el producto localmente.")
+                    return
                 }
             }
 
+            btnGuardar.text = "Sincronizando con Firestore..."
+
+            FirebaseManager.sincronizarProducto(
+                idProducto = idProducto,
+                idTienda = idTienda,
+                nombre = nombre,
+                categoria = categoria,
+                precio = precio,
+                stock = stock,
+                descripcion = descripcion,
+                disponible = switchDisponible.isChecked,
+                imagenPrincipal = principal,
+                imagen2 = imagenes.getOrNull(1),
+                imagen3 = imagenes.getOrNull(2),
+                imagen4 = imagenes.getOrNull(3)
+            )
+                .addOnSuccessListener {
+                    mostrarMensaje(
+                        if (esEdicion) {
+                            "Producto actualizado y sincronizado correctamente."
+                        } else {
+                            "Producto registrado y sincronizado correctamente."
+                        }
+                    )
+                    setResult(RESULT_OK)
+                    finish()
+                }
+                .addOnFailureListener { error ->
+                    mostrarMensaje(
+                        "El producto quedó guardado localmente, pero falló la sincronización con Firestore: ${error.localizedMessage ?: error.message}"
+                    )
+                    setResult(RESULT_OK)
+                    finish()
+                }
+
         } catch (e: Exception) {
+            restaurarBotonGuardar()
             mostrarMensaje(
-                "Ocurrió un error al guardar el producto."
+                "Ocurrió un error al guardar el producto: ${e.localizedMessage ?: e.message}"
             )
         }
+    }
+
+    private fun restaurarBotonGuardar() {
+        btnGuardar.isEnabled = true
+        btnGuardar.text = if (esEdicion) "Guardar cambios" else "Guardar producto"
+    }
+
+    private fun finalizarConError(mensaje: String) {
+
+        mostrarMensaje(mensaje)
+        setResult(RESULT_OK)
+        finish()
     }
 
     private fun mostrarMensaje(mensaje: String) {

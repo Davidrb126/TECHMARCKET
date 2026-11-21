@@ -160,6 +160,82 @@
 
         </LinearLayout>
 
+        <!-- NUEVA SECCIÓN: ESTADO DEL PAGO -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="22dp"
+            android:layout_marginBottom="10dp"
+            android:text="Estado del pago"
+            android:textColor="#172033"
+            android:textSize="17sp"
+            android:textStyle="bold" />
+
+        <LinearLayout
+            android:id="@+id/contenedorEstadoPagoDetalle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_tarjeta_pedido"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <TextView
+                android:id="@+id/tvEstadoPagoDetalle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="#DCFCE7"
+                android:paddingHorizontal="12dp"
+                android:paddingVertical="7dp"
+                android:text="Pago aprobado"
+                android:textColor="#16A34A"
+                android:textSize="13sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tvDescripcionEstadoPagoDetalle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:text="Estado de la transacción."
+                android:textColor="#566176"
+                android:textSize="14sp" />
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginVertical="12dp"
+                android:background="#E6EAF1" />
+
+            <TextView
+                android:id="@+id/tvEtiquetaValorPagoDetalle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Valor pagado"
+                android:textColor="#778198"
+                android:textSize="12sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tvValorPagoDetalle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="5dp"
+                android:text="$0"
+                android:textColor="#172033"
+                android:textSize="20sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tvProveedorPagoDetalle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:text="Mercado Pago"
+                android:textColor="#778198"
+                android:textSize="13sp" />
+
+        </LinearLayout>
+
         <!-- Entrega y pago -->
         <TextView
             android:layout_width="match_parent"

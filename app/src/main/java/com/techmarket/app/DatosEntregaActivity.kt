@@ -1,7 +1,15 @@
 package com.techmarket.app
 
+import android.Manifest
+import android.annotation.SuppressLint
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.location.Address
+import android.location.Geocoder
+import android.os.Build
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.util.Patterns
 import android.view.View
 import android.widget.AdapterView
@@ -11,9 +19,16 @@ import android.widget.EditText
 import android.widget.Spinner
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
+import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.Priority
+import com.google.android.gms.tasks.CancellationTokenSource
 import com.techmarket.app.database.DireccionDAO
 import com.techmarket.app.database.UsuarioDAO
+import java.util.Locale
+import java.util.concurrent.Executors
 
 class DatosEntregaActivity : AppCompatActivity() {
 
@@ -28,6 +43,7 @@ class DatosEntregaActivity : AppCompatActivity() {
 
     private lateinit var btnVolver: TextView
     private lateinit var btnContinuarPago: Button
+    private lateinit var btnUsarMiUbicacion: Button
     private lateinit var spinnerDirecciones: Spinner
 
     private lateinit var usuarioDAO: UsuarioDAO
@@ -37,6 +53,39 @@ class DatosEntregaActivity : AppCompatActivity() {
 
     private val direccionesGuardadas =
         mutableListOf<DireccionEntrega>()
+
+    private val fusedLocationClient by lazy {
+        LocationServices.getFusedLocationProviderClient(this)
+    }
+
+    private val geocoderExecutor =
+        Executors.newSingleThreadExecutor()
+
+    private val mainHandler =
+        Handler(Looper.getMainLooper())
+
+    private var latitudUbicacion: Double? = null
+    private var longitudUbicacion: Double? = null
+
+    private val solicitudPermisosUbicacion =
+        registerForActivityResult(
+            ActivityResultContracts.RequestMultiplePermissions()
+        ) { permisos ->
+
+            val ubicacionPermitida =
+                permisos[Manifest.permission.ACCESS_FINE_LOCATION] == true ||
+                        permisos[Manifest.permission.ACCESS_COARSE_LOCATION] == true
+
+            if (ubicacionPermitida) {
+                obtenerUbicacionActual()
+            } else {
+                Toast.makeText(
+                    this,
+                    "No se concedió el permiso de ubicación. Puedes ingresar la dirección manualmente.",
+                    Toast.LENGTH_LONG
+                ).show()
+            }
+        }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -78,6 +127,9 @@ class DatosEntregaActivity : AppCompatActivity() {
         btnContinuarPago =
             findViewById(R.id.btnContinuarPago)
 
+        btnUsarMiUbicacion =
+            findViewById(R.id.btnUsarMiUbicacion)
+
         spinnerDirecciones =
             findViewById(R.id.spinnerDireccionesGuardadas)
     }
@@ -101,7 +153,6 @@ class DatosEntregaActivity : AppCompatActivity() {
 
                 if (it.moveToFirst()) {
 
-                    // La columna correo pertenece a la tabla usuarios.
                     val indiceCorreo =
                         it.getColumnIndex("correo")
 
@@ -185,12 +236,14 @@ class DatosEntregaActivity : AppCompatActivity() {
 
     private fun configurarEventos() {
 
-        // Volver a la pantalla anterior.
         btnVolver.setOnClickListener {
             finish()
         }
 
-        // Seleccionar una dirección guardada.
+        btnUsarMiUbicacion.setOnClickListener {
+            solicitarPermisoUbicacion()
+        }
+
         spinnerDirecciones.onItemSelectedListener =
             object : AdapterView.OnItemSelectedListener {
 
@@ -219,17 +272,302 @@ class DatosEntregaActivity : AppCompatActivity() {
                 }
             }
 
-        // Continuar al pago.
         btnContinuarPago.setOnClickListener {
             validarDatosEntrega()
         }
     }
 
-    // SELECCIONAR DIRECCIÓN
+    // SOLICITAR PERMISOS DE UBICACIÓN
+
+    private fun solicitarPermisoUbicacion() {
+
+        val tieneUbicacionPrecisa =
+            ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED
+
+        val tieneUbicacionAproximada =
+            ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.ACCESS_COARSE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED
+
+        if (tieneUbicacionPrecisa || tieneUbicacionAproximada) {
+            obtenerUbicacionActual()
+        } else {
+            solicitudPermisosUbicacion.launch(
+                arrayOf(
+                    Manifest.permission.ACCESS_FINE_LOCATION,
+                    Manifest.permission.ACCESS_COARSE_LOCATION
+                )
+            )
+        }
+    }
+
+    // OBTENER COORDENADAS ACTUALES
+
+    @SuppressLint("MissingPermission")
+    private fun obtenerUbicacionActual() {
+
+        val tieneUbicacionPrecisa =
+            ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED
+
+        val tieneUbicacionAproximada =
+            ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.ACCESS_COARSE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED
+
+        if (!tieneUbicacionPrecisa && !tieneUbicacionAproximada) {
+            return
+        }
+
+        btnUsarMiUbicacion.isEnabled = false
+        btnUsarMiUbicacion.text = "Obteniendo ubicación..."
+
+        val prioridad = if (tieneUbicacionPrecisa) {
+            Priority.PRIORITY_HIGH_ACCURACY
+        } else {
+            Priority.PRIORITY_BALANCED_POWER_ACCURACY
+        }
+
+        val cancellationTokenSource =
+            CancellationTokenSource()
+
+        fusedLocationClient.getCurrentLocation(
+            prioridad,
+            cancellationTokenSource.token
+        ).addOnSuccessListener { location ->
+
+            if (location != null) {
+                procesarUbicacion(
+                    location.latitude,
+                    location.longitude
+                )
+            } else {
+                obtenerUltimaUbicacion()
+            }
+
+        }.addOnFailureListener {
+
+            obtenerUltimaUbicacion()
+        }
+    }
+
+    @SuppressLint("MissingPermission")
+    private fun obtenerUltimaUbicacion() {
+
+        fusedLocationClient.lastLocation
+            .addOnSuccessListener { location ->
+
+                if (location != null) {
+                    procesarUbicacion(
+                        location.latitude,
+                        location.longitude
+                    )
+                } else {
+                    restaurarBotonUbicacion()
+
+                    Toast.makeText(
+                        this,
+                        "No fue posible obtener tu ubicación. Verifica que la ubicación del dispositivo esté activada.",
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
+            }
+            .addOnFailureListener {
+
+                restaurarBotonUbicacion()
+
+                Toast.makeText(
+                    this,
+                    "Ocurrió un error al consultar la ubicación.",
+                    Toast.LENGTH_LONG
+                ).show()
+            }
+    }
+
+    // CONVERTIR COORDENADAS EN DIRECCIÓN
+
+    private fun procesarUbicacion(
+        latitud: Double,
+        longitud: Double
+    ) {
+
+        latitudUbicacion = latitud
+        longitudUbicacion = longitud
+
+        if (!Geocoder.isPresent()) {
+            restaurarBotonUbicacion()
+
+            Toast.makeText(
+                this,
+                "No está disponible el servicio para convertir la ubicación en dirección.",
+                Toast.LENGTH_LONG
+            ).show()
+
+            return
+        }
+
+        val geocoder = Geocoder(
+            this,
+            Locale("es", "CO")
+        )
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+
+            geocoder.getFromLocation(
+                latitud,
+                longitud,
+                1,
+                object : Geocoder.GeocodeListener {
+
+                    override fun onGeocode(addresses: MutableList<Address>) {
+                        mainHandler.post {
+                            aplicarDireccionObtenida(addresses)
+                        }
+                    }
+
+                    override fun onError(errorMessage: String?) {
+                        mainHandler.post {
+                            restaurarBotonUbicacion()
+
+                            Toast.makeText(
+                                this@DatosEntregaActivity,
+                                "Se obtuvieron las coordenadas, pero no fue posible identificar la dirección. Puedes ingresarla manualmente.",
+                                Toast.LENGTH_LONG
+                            ).show()
+                        }
+                    }
+                }
+            )
+
+        } else {
+
+            geocoderExecutor.execute {
+
+                try {
+                    @Suppress("DEPRECATION")
+                    val direcciones = geocoder.getFromLocation(
+                        latitud,
+                        longitud,
+                        1
+                    )
+
+                    mainHandler.post {
+                        aplicarDireccionObtenida(
+                            direcciones.orEmpty()
+                        )
+                    }
+
+                } catch (e: Exception) {
+
+                    mainHandler.post {
+                        restaurarBotonUbicacion()
+
+                        Toast.makeText(
+                            this,
+                            "No fue posible identificar la dirección. Puedes ingresarla manualmente.",
+                            Toast.LENGTH_LONG
+                        ).show()
+                    }
+                }
+            }
+        }
+    }
+
+    // LLENAR LOS CAMPOS DE DIRECCIÓN
+
+    private fun aplicarDireccionObtenida(
+        direcciones: List<Address>
+    ) {
+
+        restaurarBotonUbicacion()
+
+        val direccion = direcciones.firstOrNull()
+
+        if (direccion == null) {
+
+            Toast.makeText(
+                this,
+                "No se encontró una dirección para esta ubicación. Puedes ingresarla manualmente.",
+                Toast.LENGTH_LONG
+            ).show()
+
+            return
+        }
+
+        val departamento =
+            direccion.adminArea.orEmpty()
+
+        val ciudad =
+            direccion.locality
+                ?: direccion.subAdminArea
+                ?: direccion.subLocality
+                ?: ""
+
+        val direccionCalle = listOfNotNull(
+            direccion.thoroughfare,
+            direccion.subThoroughfare
+        )
+            .filter { it.isNotBlank() }
+            .joinToString(" ")
+
+        val direccionFinal = if (direccionCalle.isNotBlank()) {
+            direccionCalle
+        } else {
+            direccion.featureName
+                ?.takeIf { it.isNotBlank() && it != ciudad }
+                ?: ""
+        }
+
+        if (departamento.isNotBlank()) {
+            etDepartamento.setText(departamento)
+        }
+
+        if (ciudad.isNotBlank()) {
+            etCiudad.setText(ciudad)
+        }
+
+        if (direccionFinal.isNotBlank()) {
+            etDireccion.setText(direccionFinal)
+        }
+
+        if (departamento.isBlank() && ciudad.isBlank() &&
+            direccionFinal.isBlank()
+        ) {
+            Toast.makeText(
+                this,
+                "No se pudieron identificar los datos de la dirección. Puedes completarlos manualmente.",
+                Toast.LENGTH_LONG
+            ).show()
+        } else {
+            Toast.makeText(
+                this,
+                "Ubicación obtenida. Verifica y completa tu dirección antes de continuar.",
+                Toast.LENGTH_LONG
+            ).show()
+        }
+    }
+
+    private fun restaurarBotonUbicacion() {
+        btnUsarMiUbicacion.isEnabled = true
+        btnUsarMiUbicacion.text = "Usar mi ubicación"
+    }
+
+    // SELECCIONAR DIRECCIÓN GUARDADA
 
     private fun seleccionarDireccion(
         direccion: DireccionEntrega
     ) {
+
+        // Una dirección guardada no tiene coordenadas GPS asociadas.
+        latitudUbicacion = null
+        longitudUbicacion = null
 
         etNombre.setText(direccion.nombre)
         etTelefono.setText(direccion.telefono)
@@ -320,8 +658,6 @@ class DatosEntregaActivity : AppCompatActivity() {
             return
         }
 
-        // GUARDAR DATOS TEMPORALMENTE.
-
         val datosEntrega = DatosEntrega(
             nombre = nombre,
             documento = documento,
@@ -330,7 +666,9 @@ class DatosEntregaActivity : AppCompatActivity() {
             departamento = departamento,
             ciudad = ciudad,
             direccion = direccion,
-            informacionAdicional = informacionAdicional
+            informacionAdicional = informacionAdicional,
+            latitud = latitudUbicacion,
+            longitud = longitudUbicacion
         )
 
         DatosEntregaManager.guardar(datosEntrega)
@@ -340,8 +678,6 @@ class DatosEntregaActivity : AppCompatActivity() {
             "Datos de entrega guardados correctamente.",
             Toast.LENGTH_SHORT
         ).show()
-
-        // ABRIR PASARELA DE PAGOS.
 
         val intent = Intent(
             this,
@@ -353,6 +689,7 @@ class DatosEntregaActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
+        geocoderExecutor.shutdown()
     }
 }
 
@@ -366,7 +703,9 @@ data class DatosEntrega(
     val departamento: String,
     val ciudad: String,
     val direccion: String,
-    val informacionAdicional: String
+    val informacionAdicional: String,
+    val latitud: Double? = null,
+    val longitud: Double? = null
 )
 
 // ALMACENAMIENTO TEMPORAL

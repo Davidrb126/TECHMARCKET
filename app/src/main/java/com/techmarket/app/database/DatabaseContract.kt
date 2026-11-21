@@ -90,6 +90,8 @@ object DatabaseContract {
         const val TOTAL = "total"
         const val FECHA = "fecha"
         const val ESTADO = "estado"
+        const val LATITUD = "latitud"
+        const val LONGITUD = "longitud"
     }
 
     // ==========================================

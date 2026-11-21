@@ -104,6 +104,16 @@ class PedidoDAO(context: Context) {
                 put(DatabaseContract.Pedidos.FECHA, pedido.fecha)
                 put(DatabaseContract.Pedidos.ESTADO, ESTADO_PENDIENTE)
                 put(COL_DOCUMENTO_COMPRADOR, documentoComprador.trim())
+                if (pedido.latitud != null) {
+                    put(DatabaseContract.Pedidos.LATITUD, pedido.latitud)
+                } else {
+                    putNull(DatabaseContract.Pedidos.LATITUD)
+                }
+                if (pedido.longitud != null) {
+                    put(DatabaseContract.Pedidos.LONGITUD, pedido.longitud)
+                } else {
+                    putNull(DatabaseContract.Pedidos.LONGITUD)
+                }
             }
 
             dbEscritura.insertOrThrow(
@@ -682,7 +692,15 @@ class PedidoDAO(context: Context) {
             ),
             estado = estadoTienda ?: cursor.getString(
                 cursor.getColumnIndexOrThrow(DatabaseContract.Pedidos.ESTADO)
-            )
+            ),
+            latitud = cursor.getColumnIndexOrThrow(DatabaseContract.Pedidos.LATITUD)
+                .let { indice ->
+                    if (cursor.isNull(indice)) null else cursor.getDouble(indice)
+                },
+            longitud = cursor.getColumnIndexOrThrow(DatabaseContract.Pedidos.LONGITUD)
+                .let { indice ->
+                    if (cursor.isNull(indice)) null else cursor.getDouble(indice)
+                }
         )
     }
 
